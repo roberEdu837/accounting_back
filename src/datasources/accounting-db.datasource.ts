@@ -4,7 +4,11 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'accountingDB',
   connector: 'mysql',
-  url: process.env.MYSQL_URL,
+  host: 'shuttle.proxy.rlwy.net',
+  port: 26392,
+  user: 'root',
+  password: 'pDoKhBKuTDiGRsfaGpniqVTFuIohOrQQ',
+  database: 'accounting',
 };
 
 // Observe application's life cycle to disconnect the datasource when
