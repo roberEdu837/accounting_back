@@ -69,6 +69,8 @@ export class MonthlyAccounting extends Entity {
   @belongsTo(() => Customer)
   customerId: number;
 
+  customer?: Customer;
+
   @hasMany(() => Paymet)
   paymets: Paymet[];
 
@@ -77,10 +79,10 @@ export class MonthlyAccounting extends Entity {
   }
 }
 
+// ✅ Relaciones declaradas correctamente
 export interface MonthlyAccountingRelations {
-  // describe navigational properties here
-  customer?: Customer; // <- Asegúrate de incluir esto
-  // también incluye otras relaciones como:
+  customer?: Customer;
+  // otras relaciones si las tienes...
 }
 
 export type MonthlyAccountingWithRelations = MonthlyAccounting &

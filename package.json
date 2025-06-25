@@ -64,6 +64,7 @@
     "jsonwebtoken": "^9.0.2",
     "loopback-connector-mssql": "^3.8.0",
     "loopback-connector-mysql": "^7.1.4",
+    "pdfmake": "^0.2.20",
     "tslib": "^2.0.0"
   },
   "devDependencies": {

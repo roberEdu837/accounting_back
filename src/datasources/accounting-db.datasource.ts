@@ -1,13 +1,23 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
 
+// const config = {
+//   name: 'accountingDB',
+//   connector: 'mysql',
+//   host: 'shuttle.proxy.rlwy.net',
+//   port: 26392,
+//   user: 'root',
+//   password: 'pDoKhBKuTDiGRsfaGpniqVTFuIohOrQQ',
+//   database: 'accounting',
+// };
+
 const config = {
   name: 'accountingDB',
   connector: 'mysql',
-  host: 'shuttle.proxy.rlwy.net',
-  port: 26392,
+  host: 'localhost',
+  port: 3306,
   user: 'root',
-  password: 'pDoKhBKuTDiGRsfaGpniqVTFuIohOrQQ',
+  password: 'root',
   database: 'accounting',
 };
 
