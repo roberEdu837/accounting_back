@@ -1,4 +1,4 @@
-import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -14,15 +14,20 @@ import {
   patch,
   post,
   requestBody,
+  Response,
   response,
+  RestBindings,
 } from '@loopback/rest';
 import {Paymet} from '../models/paymet.model';
 import {PaymetRepository} from '../repositories';
-@authenticate('jwt')
+import {PdfGeneratorService} from '../services/pdf.service';
+//@authenticate('jwt')
 export class PaymetController {
   constructor(
     @repository(PaymetRepository)
     public paymetRepository: PaymetRepository,
+    @inject('services.PdfGeneratorService')
+    protected pdfService: PdfGeneratorService,
   ) {}
 
   @post('/paymets')
@@ -114,5 +119,65 @@ export class PaymetController {
     paymet: Paymet,
   ): Promise<void> {
     await this.paymetRepository.updateById(id, paymet);
+  }
+
+  @post('/statement')
+  @response(200, {
+    description: 'PDF generado',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async generatePdf(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              customerName: {type: 'string'},
+              rfc: {type: 'string'},
+              period: {type: 'string'},
+              payments: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    paymentDate: {type: 'string'},
+                    amount: {type: 'number'},
+                    // status: {type: 'string'},
+                  },
+                  required: ['paymentDate', 'amount'],
+                },
+              },
+            },
+            required: ['customerName', 'rfc', 'period', 'payments'],
+          },
+        },
+      },
+    })
+    body: {
+      customerName: string;
+      rfc: string;
+      period: string;
+      payments: {paymentDate: string; amount: number}[];
+    },
+    @inject(RestBindings.Http.RESPONSE) res: Response,
+  ): Promise<Response> {
+    const pdfBuffer = await this.pdfService.generateAccountStatement(body);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="estado-cuenta.pdf"',
+    );
+    res.end(pdfBuffer);
+
+    return res;
   }
 }

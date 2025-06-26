@@ -16,6 +16,15 @@ export class Paymet extends Entity {
   amount: number;
 
   @property({
+    type: 'date',
+    required: false,
+    jsonSchema: {
+      format: 'date',
+    },
+  })
+  paymentDate: string;
+
+  @property({
     type: 'number',
   })
   monthlyAccountingId?: number;

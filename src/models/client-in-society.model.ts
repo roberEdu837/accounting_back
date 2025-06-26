@@ -13,7 +13,9 @@ export class ClientInSociety extends Entity {
   @property({
     type: 'date',
     required: false,
-    default: false,
+    jsonSchema: {
+      format: 'date',
+    },
   })
   paymentDate: string;
 
