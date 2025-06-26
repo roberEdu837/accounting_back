@@ -1,4 +1,5 @@
 import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -16,13 +17,18 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {Customer} from '../models';
+import {omit} from 'lodash';
+import {Customer, CustomerUpdate} from '../models';
 import {CustomerRepository} from '../repositories';
+import {CustomerService} from '../services/customer.service';
+
 @authenticate('jwt')
 export class CustomerController {
   constructor(
     @repository(CustomerRepository)
     public customerRepository: CustomerRepository,
+    @service(CustomerService)
+    public customerService: CustomerService,
   ) {}
 
   @post('/customers')
@@ -100,11 +106,11 @@ export class CustomerController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Customer, {partial: true}),
+          schema: getModelSchemaRef(CustomerUpdate, {partial: true}),
         },
       },
     })
-    customer: Customer,
+    customer: CustomerUpdate,
     @param.where(Customer) where?: Where<Customer>,
   ): Promise<Count> {
     return this.customerRepository.updateAll(customer, where);
@@ -136,12 +142,25 @@ export class CustomerController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Customer, {partial: true}),
+          schema: getModelSchemaRef(CustomerUpdate, {partial: true}),
         },
       },
     })
-    customer: Customer,
+    customer: CustomerUpdate,
   ): Promise<void> {
-    await this.customerRepository.updateById(id, customer);
+    const customerUpdate = omit(customer, ['month']);
+    const currentCustomer = await this.customerRepository.findById(id);
+    console.log(customerUpdate.honorary, 'edit');
+    console.log(currentCustomer.honorary, 'curent');
+    if (customerUpdate.honorary > currentCustomer.honorary) {
+      await this.customerService.editIfHonorarioGreaterThan(
+        id,
+        customer.month,
+        customer.honorary,
+        customer.periodicity,
+      );
+    }
+
+    await this.customerRepository.updateById(id, customerUpdate);
   }
 }

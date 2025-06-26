@@ -208,7 +208,17 @@ export class MonthlyAccountingController {
         whereFilter.and = [
           {year: year},
           {
-            or: [{month: month}, {month: month - 1}],
+            or: [
+              {
+                and: [{month: month}, {periodicity: 'BIMESTRAL'}],
+              },
+              {
+                and: [{month: month - 1}, {periodicity: 'BIMESTRAL'}],
+              },
+              {
+                and: [{month: month}, {periodicity: {neq: 'BIMESTRAL'}}],
+              },
+            ],
           },
         ];
       } else {
@@ -216,7 +226,6 @@ export class MonthlyAccountingController {
         whereFilter.year = year;
       }
     } else if (year !== undefined) {
-      // Si solo se manda el año, se filtra solo por año
       whereFilter.year = year;
     }
 
