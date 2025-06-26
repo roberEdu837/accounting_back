@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
   Count,
@@ -17,10 +16,11 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
+import {AccountingDebts, DebtsCustomer} from '../@types/accountingDebts';
 import {MonthlyAccounting} from '../models';
 import {CustomerRepository, MonthlyAccountingRepository} from '../repositories';
 import {AccountingService} from '../services/accounting.service';
-@authenticate('jwt')
+//@authenticate('jwt')
 export class MonthlyAccountingController {
   constructor(
     @repository(MonthlyAccountingRepository)
@@ -88,6 +88,55 @@ export class MonthlyAccountingController {
     @param.filter(MonthlyAccounting) filter?: Filter<MonthlyAccounting>,
   ): Promise<MonthlyAccounting[]> {
     return this.monthlyAccountingRepository.find(filter);
+  }
+
+  @get('/monthly-accountings/debts/customer/{id}')
+  @response(200, {
+    description: 'Deudas de clientes',
+    content: {
+      'application/json': {schema: {type: 'array', items: {type: 'number'}}},
+    },
+  })
+  async getDebts(@param.path.number('id') id: number): Promise<DebtsCustomer> {
+    const accountings = await this.monthlyAccountingRepository.find({
+      where: {
+        customerId: id,
+      },
+      include: [
+        {
+          relation: 'paymets',
+        },
+      ],
+    });
+
+    const accountingWithTotals = accountings.map(accounting => {
+      const total =
+        accounting.paymets?.reduce((sum, p) => sum + (p.amount ?? 0), 0) ?? 0;
+
+      if (accounting.honorary == total) return undefined;
+
+      const debts = accounting.honorary - total;
+      return {
+        id: accounting.id,
+        total,
+        month: accounting.month,
+        year: accounting.year,
+        honorary: accounting.honorary,
+        debts,
+      };
+    });
+
+    const customer = await this.customerRepository.findById(id);
+
+    const filter = accountingWithTotals.filter(
+      (item): item is AccountingDebts => item !== undefined,
+    );
+    const debtsCustomer = {
+      name: customer.socialReason,
+      rfc: customer.rfc,
+      debts: filter,
+    };
+    return debtsCustomer;
   }
 
   @get('/monthly-accountings/years')
