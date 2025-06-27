@@ -150,7 +150,6 @@ export class PaymetController {
                   properties: {
                     paymentDate: {type: 'string'},
                     amount: {type: 'number'},
-                    // status: {type: 'string'},
                   },
                   required: ['paymentDate', 'amount'],
                 },

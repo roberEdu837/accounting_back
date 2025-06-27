@@ -1,4 +1,4 @@
-import {service} from '@loopback/core';
+import {inject, service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -14,12 +14,15 @@ import {
   patch,
   post,
   requestBody,
+  Response,
   response,
+  RestBindings,
 } from '@loopback/rest';
 import {AccountingDebts, DebtsCustomer} from '../@types/accountingDebts';
 import {MonthlyAccounting} from '../models';
 import {CustomerRepository, MonthlyAccountingRepository} from '../repositories';
 import {AccountingService} from '../services/accounting.service';
+import {PdfGeneratorService} from '../services/pdf.service';
 //@authenticate('jwt')
 export class MonthlyAccountingController {
   constructor(
@@ -29,6 +32,8 @@ export class MonthlyAccountingController {
     public customerRepository: CustomerRepository,
     @service(AccountingService)
     public accountingService: AccountingService,
+    @inject('services.PdfGeneratorService')
+    protected pdfService: PdfGeneratorService,
   ) {}
 
   @post('/monthly-accountings')
@@ -305,5 +310,80 @@ export class MonthlyAccountingController {
     }
 
     return results;
+  }
+
+  @post('/monthly-accountings/debts')
+  @response(200, {
+    description: 'PDF generado',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async generatePdf(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              name: {type: 'string'},
+              rfc: {type: 'string'},
+              debts: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: {type: 'number'},
+                    total: {type: 'number'},
+                    month: {type: 'number'},
+                    year: {type: 'number'},
+                    honorary: {type: 'number'},
+                    debts: {type: 'number'},
+                  },
+                  required: [
+                    'id',
+                    'total',
+                    'month',
+                    'year',
+                    'honorary',
+                    'debts',
+                  ],
+                },
+              },
+            },
+            required: ['name', 'rfc', 'debts'],
+          },
+        },
+      },
+    })
+    body: {
+      name: string;
+      rfc: string;
+      debts: {
+        id: number;
+        total: number;
+        month: number;
+        year: number;
+        honorary: number;
+        debts: number;
+      }[];
+    },
+    @inject(RestBindings.Http.RESPONSE) res: Response,
+  ): Promise<Response> {
+    const pdfBuffer = await this.pdfService.generateAccountStatement2(body);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="estado-de-deudas.pdf"',
+    );
+    res.end(pdfBuffer);
+
+    return res;
   }
 }
