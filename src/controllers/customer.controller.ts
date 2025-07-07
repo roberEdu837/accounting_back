@@ -148,11 +148,12 @@ export class CustomerController {
     })
     customer: CustomerUpdate,
   ): Promise<void> {
-    const customerUpdate = omit(customer, ['month']);
-    const currentCustomer = await this.customerRepository.findById(id);
-    console.log(customerUpdate.honorary, 'edit');
-    console.log(currentCustomer.honorary, 'curent');
+    const customerUpdate = omit(customer, ['month']); // Elimina el campo 'month' del objeto customerUpdate
+    const currentCustomer = await this.customerRepository.findById(id); // Obtiene el cliente actual por ID
+
+    // checa si el honorario es mayor al actual
     if (customerUpdate.honorary > currentCustomer.honorary) {
+      // Si es mayor, actualiza la contabilidad mensual y elimina los clientes en sociedad
       await this.customerService.editIfHonorarioGreaterThan(
         id,
         customer.month,
@@ -160,7 +161,7 @@ export class CustomerController {
         customer.periodicity,
       );
     }
-
+    // Actualiza el cliente
     await this.customerRepository.updateById(id, customerUpdate);
   }
 }

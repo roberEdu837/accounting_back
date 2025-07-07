@@ -30,6 +30,7 @@ import {
 import {MyAuthorizationProvider} from './provider/MyAuthorizationProvider';
 import {MySequence} from './sequence';
 import {AccountingService} from './services/accounting.service';
+import {EmailService} from './services/email.service';
 import {BcryptHasher} from './services/hash.password.bcryptjs';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
@@ -48,6 +49,7 @@ export class AccountingApplication extends BootMixin(
     };
     this.configure(AuthorizationBindings.COMPONENT).to(authOptions);
     this.component(AuthorizationComponent);
+    this.service(EmailService);
     this.setUpBindings();
 
     this.dataSource(AccountingDbDataSource);

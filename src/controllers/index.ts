@@ -8,3 +8,4 @@ export * from './user-user-credentials.controller';
 export * from './user.controller';
 // export * from './client-in-society.controller';
 export * from './client-in-society-monthly-accounting.controller';
+export * from './notification.controller';

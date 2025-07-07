@@ -91,6 +91,7 @@ export class ClientInSocietyController {
               month: {type: 'number'},
               search: {type: 'string'},
               year: {type: 'number'},
+              status: {type: 'boolean'},
             },
           },
         },
@@ -100,6 +101,7 @@ export class ClientInSocietyController {
       month?: number;
       search?: string;
       year?: number;
+      status?: boolean;
     },
   ): Promise<ClientInSociety[]> {
     const month = body?.month;
@@ -107,23 +109,11 @@ export class ClientInSocietyController {
     const search = body?.search?.trim().toLowerCase();
 
     const filter: Filter<ClientInSociety> = {
+      order: ['status ASC'],
       include: [
         {
           relation: 'monthlyAccounting',
           scope: {
-            where:
-              month !== undefined && year !== undefined
-                ? month % 2 === 0
-                  ? {
-                      and: [
-                        {year: year},
-                        {or: [{month: month}, {month: month - 1}]},
-                      ],
-                    }
-                  : {month, year}
-                : year !== undefined
-                  ? {year}
-                  : undefined,
             include: [
               {
                 relation: 'customer',
@@ -134,24 +124,40 @@ export class ClientInSocietyController {
       ],
     };
 
-    const results = await this.clientInSocietyRepository.find(filter);
+    if (body?.status !== undefined) {
+      filter.where = {status: body.status};
+    }
 
-    // Filtro adicional en memoria para asegurar match con contabilidad
+    const results = await this.clientInSocietyRepository.find(filter);
     const filteredResults = results.filter(item => {
       const accounting = item.monthlyAccounting;
-      if (!accounting) return false;
 
-      if (month !== undefined && year !== undefined) {
-        if (month % 2 === 0) {
+      if (
+        typeof month === 'number' &&
+        month % 2 === 0 &&
+        month !== 0 &&
+        year !== 0
+      ) {
+        if (accounting?.periodicity === 'BIMESTRAL') {
           return (
-            accounting.year === year &&
-            (accounting.month === month || accounting.month === month - 1)
+            accounting?.month === month ||
+            (accounting?.month === month - 1 && accounting.year == year)
           );
         } else {
-          return accounting.month === month && accounting.year === year;
+          return accounting?.month === month && accounting.year === year;
         }
-      } else if (year !== undefined) {
-        return accounting.year === year;
+      }
+
+      if (typeof month === 'number' && month % 2 !== 0 && month !== 0) {
+        if (typeof year === 'number' && year !== 0) {
+          return accounting?.month === month && accounting.year === year;
+        } else {
+          return accounting?.month === month;
+        }
+      }
+
+      if (typeof year === 'number' && year !== 0) {
+        return accounting?.year === year;
       }
 
       return true;
@@ -186,6 +192,23 @@ export class ClientInSocietyController {
     @param.where(ClientInSociety) where?: Where<ClientInSociety>,
   ): Promise<Count> {
     return this.clientInSocietyRepository.updateAll(clientInSociety, where);
+  }
+
+  @get('/client-in-societies/associated-debts')
+  @response(200, {
+    description: 'Valida si existe deuda con asociados',
+  })
+  async findByStatus(): Promise<boolean> {
+    const associated = await this.clientInSocietyRepository.find({
+      where: {
+        status: false,
+      },
+    });
+
+    if (associated.length > 0) {
+      return true;
+    }
+    return false;
   }
 
   @get('/client-in-societies/{id}')
