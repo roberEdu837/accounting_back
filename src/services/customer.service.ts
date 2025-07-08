@@ -1,6 +1,7 @@
 import {repository} from '@loopback/repository';
 import {
   ClientInSocietyRepository,
+  CustomerRepository,
   MonthlyAccountingRepository,
 } from '../repositories';
 
@@ -10,6 +11,8 @@ export class CustomerService {
     public monthlyAccountingRepository: MonthlyAccountingRepository,
     @repository(ClientInSocietyRepository)
     public clientInSocietyRepository: ClientInSocietyRepository,
+    @repository(CustomerRepository)
+    public customerRepository: CustomerRepository,
   ) {}
 
   async editIfHonorarioGreaterThan(
@@ -40,6 +43,25 @@ export class CustomerService {
     // Eliminar todos los registros de clientes en sociedad asociados a esta contabilidad mensual
     await this.clientInSocietyRepository.deleteAll({
       monthlyAccountingId: accounting?.id,
+    });
+  }
+
+  async getCustomerExpereFIEL() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Inicio del día actual
+    console.log(today.toString(), 'today');
+
+    const threeMonthsFromToday = new Date();
+    threeMonthsFromToday.setMonth(threeMonthsFromToday.getMonth() + 3);
+    threeMonthsFromToday.setHours(23, 59, 59, 999); // Fin del día 3 meses después
+
+    // Buscar todos los que vencen entre hoy y dentro de 3 meses
+    return this.customerRepository.find({
+      where: {
+        renewalDate: {
+          between: [today.toString(), threeMonthsFromToday.toString()],
+        },
+      },
     });
   }
 }

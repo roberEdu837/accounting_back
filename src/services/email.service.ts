@@ -19,15 +19,15 @@ export class EmailService {
       <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
         <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <div style="background-color: #09356f; padding: 20px; text-align: center; color: white;">
-            <h1>¡Hola!</h1>
+          <h1>Recordatorio de vencimiento de FIEL</h1>
           </div>
           <div style="padding: 30px; text-align: center;">
             <img src="cid:logoimage" alt="Imagen decorativa" style="width: 150px; border-radius: 50%; margin-bottom: 20px;" />
             <p style="font-size: 16px; color: #333;">
-              Este es un correo de prueba
+              ${message}
             </p>
             <p style="font-size: 14px; color: #777;">
-              Gracias por utilizar nuestros servicios.
+              Favor de atender esta notificación a la brevedad posible.
             </p>
           </div>
           <div style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #999;">

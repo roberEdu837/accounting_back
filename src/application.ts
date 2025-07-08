@@ -12,6 +12,7 @@ import {
 } from '@loopback/authentication';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
+import {CronComponent} from '@loopback/cron';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {
@@ -74,11 +75,12 @@ export class AccountingApplication extends BootMixin(
     this.bootOptions = {
       controllers: {
         // Customize ControllerBooter Conventions here
-        dirs: ['controllers'],
-        extensions: ['.controller.js'],
+        dirs: ['controllers', 'cron-jobs'],
+        extensions: ['.controller.js', '.cronjob.js'],
         nested: true,
       },
     };
+    this.component(CronComponent);
   }
   setUpBindings() {
     this.bind('providers.MyAuthorizationProvider')
