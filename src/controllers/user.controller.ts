@@ -224,7 +224,7 @@ export class UserController {
   ): Promise<{user: User; token: string}> {
     // lógica del login iría aquí
     const user = await this.userService.verifyCredentials(credentials);
-    const userProfile = await this.userService.convertToUserProfile(user);
+    const userProfile = this.userService.convertToUserProfile(user);
 
     const token = await this.jwtService.generateToken(userProfile);
     return {user, token};

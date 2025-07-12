@@ -24,6 +24,7 @@ export class MyUserService implements UserService<User, Credentials> {
       fields: {
         id: true,
         email: true,
+        name: true,
         //roles: true,
       },
       where: {email: credentials.email},
@@ -59,6 +60,7 @@ export class MyUserService implements UserService<User, Credentials> {
     return {
       [securityId]: String(user.id),
       email: user.email,
+      name: user.name,
       //roles: user.roles,
     };
   }
