@@ -5,10 +5,10 @@ const config = {
   name: 'accountingDB',
   connector: 'mysql',
   host: 'shuttle.proxy.rlwy.net',
-  port: 26392,
+  port: 3306,
   user: 'root',
-  password: 'pDoKhBKuTDiGRsfaGpniqVTFuIohOrQQ',
-  database: 'accounting',
+  password: 'QWKDxFPYnEgWEiqaTfwjZZxiQMTHeAcX',
+  database: 'accountingDB',
 };
 
 // const config = {
