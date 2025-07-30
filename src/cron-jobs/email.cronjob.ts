@@ -21,7 +21,7 @@ export class MyCronJob extends CronJob {
           );
         });
       },
-      cronTime: '0 0 * * *',
+      cronTime: '0 0 *   * *',
       start: true,
     });
   }
