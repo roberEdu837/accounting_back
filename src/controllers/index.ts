@@ -9,3 +9,5 @@ export * from './user.controller';
 // export * from './client-in-society.controller';
 export * from './client-in-society-monthly-accounting.controller';
 export * from './notification.controller';
+export * from './passwords-customer.controller';
+export * from './passwords.controller';

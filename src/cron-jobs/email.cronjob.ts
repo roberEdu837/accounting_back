@@ -12,16 +12,22 @@ export class MyCronJob extends CronJob {
     super({
       name: 'EmailJob',
       onTick: async () => {
-        const dd = await this.customerService.getCustomerExpereFIEL();
-        dd.map(async customer => {
+        const users = await this.customerService.getCustomerExpereFIEL();
+        users?.map(async customer => {
           await this.emailService.sendEmail(
-            'hanscontador@hotmail.com',
+            'ch190116079@chapala.tecmm.edu.mx',
             'Recordatorio de vencimiento de FIEL',
             `Estimado Hans, le recordamos que la FIEL del cliente "${customer.socialReason}" esta por vencer.`,
           );
+          if (customer) {
+            await this.customerService.updateNotificationStatus(
+              customer.id,
+              true,
+            );
+          }
         });
       },
-      cronTime: '0 0 *   * *',
+      cronTime: '* * * * *',
       start: true,
     });
   }

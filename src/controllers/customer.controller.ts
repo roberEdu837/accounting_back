@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
   Count,
@@ -22,7 +21,7 @@ import {Customer, CustomerUpdate} from '../models';
 import {CustomerRepository} from '../repositories';
 import {CustomerService} from '../services/customer.service';
 
-@authenticate('jwt')
+// @authenticate('jwt')
 export class CustomerController {
   constructor(
     @repository(CustomerRepository)

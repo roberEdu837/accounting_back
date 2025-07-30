@@ -71,6 +71,11 @@ export class Customer extends Entity {
   })
   startOfRelationship: string;
 
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  notificationSent?: boolean;
   constructor(data?: Partial<Customer>) {
     super(data);
   }

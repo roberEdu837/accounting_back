@@ -61,7 +61,17 @@ export class CustomerService {
         renewalDate: {
           between: [today.toString(), threeMonthsFromToday.toString()],
         },
+        notificationSent: false,
       },
+    });
+  }
+
+  async updateNotificationStatus(
+    customerId: number | undefined,
+    status: boolean,
+  ): Promise<void> {
+    await this.customerRepository.updateById(customerId, {
+      notificationSent: status,
     });
   }
 }

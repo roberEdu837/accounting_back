@@ -4,3 +4,4 @@ export * from './customer.repository';
 export * from './monthly-accounting.repository';
 export * from './paymet.repository';
 export * from './client-in-society.repository';
+export * from './passwords.repository';
