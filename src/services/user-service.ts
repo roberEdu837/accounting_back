@@ -7,7 +7,6 @@ import {PasswordHasherBindings} from '../keys';
 import {User} from '../models/user.model';
 import {Credentials, UserRepository} from '../repositories/user.repository';
 import {PasswordHasher} from './hash.password.bcryptjs';
-import {validateCredentials} from './validator';
 
 export class MyUserService implements UserService<User, Credentials> {
   constructor(
@@ -18,16 +17,17 @@ export class MyUserService implements UserService<User, Credentials> {
 
   async verifyCredentials(credentials: Credentials): Promise<User> {
     const invalidCredentialsError = 'Email o contraseña inválidas.';
-    validateCredentials(credentials);
+    //validateCredentials(credentials);
 
     const foundUser = await this.userRepository.findOne({
       fields: {
         id: true,
         email: true,
         name: true,
-        //roles: true,
       },
-      where: {email: credentials.email},
+      where: {
+        or: [{email: credentials.email}, {username: credentials.email}],
+      },
     });
 
     if (!foundUser) {

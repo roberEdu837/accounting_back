@@ -12,9 +12,10 @@ export class AccountingService {
 
   async generateMonthlyAccounting(
     customerId: number | undefined,
-    periodicity: string | undefined,
+    periodicity: string,
     honorary: number,
     rfc: string,
+    isInSociety: boolean,
   ): Promise<void> {
     const today = new Date();
 
@@ -31,7 +32,12 @@ export class AccountingService {
       stateObligation: stateObligation.PENDIENTE,
       honorary,
       periodicity,
-      rfcTaxPaymentDate: await this.getPaymentDate(rfc), // Fecha de pago del RFC
+      isInSociety,
+      rfcTaxPaymentDate: await this.getPaymentDate(
+        rfc,
+        periodicity,
+        currentMonth,
+      ), // Fecha de pago del RFC
     };
 
     const existingAccounting = await this.monthlyAccountingRepository.findOne({
@@ -57,9 +63,19 @@ export class AccountingService {
       this.monthlyAccountingRepository.create(accounting);
     }
   }
-  async getPaymentDate(rfc: string): Promise<Date> {
+  async getPaymentDate(
+    rfc: string,
+    periodicity: string,
+    month: number,
+  ): Promise<Date> {
     const date = await this.getDate();
     let result = new Date(date);
+
+    if (periodicity === 'BIMESTRAL') {
+      const year = date.getFullYear();
+      return new Date(year, month + 2, 0);
+    }
+
     let daysAdded = 0;
 
     const sixthDigit = await this.getSixthDigit(rfc);

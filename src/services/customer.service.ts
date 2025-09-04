@@ -3,6 +3,7 @@ import {
   ClientInSocietyRepository,
   CustomerRepository,
   MonthlyAccountingRepository,
+  PaymetRepository,
 } from '../repositories';
 
 export class CustomerService {
@@ -13,53 +14,88 @@ export class CustomerService {
     public clientInSocietyRepository: ClientInSocietyRepository,
     @repository(CustomerRepository)
     public customerRepository: CustomerRepository,
+    @repository(PaymetRepository)
+    public paymetRepository: PaymetRepository,
   ) {}
 
-  async editIfHonorarioGreaterThan(
-    customerId: number,
-    month: number,
-    honorary: number,
-    periodicity: string,
-  ) {
-    const year = new Date().getFullYear(); //año actual
-    if (periodicity === 'BIMESTRAL' && month % 2 === 0) {
-      // Si es bimestral y el mes es par
-      month = month - 1;
-    }
+  // async editIfHonorarioGreaterThan(
+  //   customerId: number,
+  //   month: number,
+  //   honorary: number,
+  //   periodicity: string,
+  // ) {
+  //   //Año actual
+  //   const year = new Date().getFullYear();
 
-    // Buscar la contabilidad mensual del cliente
-    const accounting = await this.monthlyAccountingRepository.findOne({
-      where: {customerId, month, year},
-    });
-    // Si no hay contabilidad mensual, no hace nada
-    if (!accounting) {
-      return;
-    }
-    // editar la contabilidad mensual con el nuevo honorario
-    await this.monthlyAccountingRepository.updateById(accounting?.id, {
-      honorary,
-    });
+  //   const isBimestral = periodicity === 'BIMESTRAL';
+  //   const isEvenMonth = month % 2 === 0;
 
-    // Eliminar todos los registros de clientes en sociedad asociados a esta contabilidad mensual
-    await this.clientInSocietyRepository.deleteAll({
-      monthlyAccountingId: accounting?.id,
-    });
+  //   // Ajustar al primer mes del bimestre
+  //   if (isBimestral && isEvenMonth) month -= 1;
+
+  //   // Buscar la contabilidad mensual del cliente
+  //   const accounting = await this.monthlyAccountingRepository.findOne({
+  //     where: {customerId, month, year},
+  //   });
+  //   // Si no hay contabilidad mensual, no hace nada
+  //   if (!accounting) {
+  //     return;
+  //   }
+
+  //   const payments = await this.paymetRepository.find({
+  //     where: {
+  //       monthlyAccountingId: accounting.id,
+  //     },
+  //   });
+
+  //   const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  //   if (total > honorary) {
+  //     console.log('No edita');
+  //     return;
+  //   }
+
+  //   // editar la contabilidad mensual con el nuevo honorario
+  //   await this.monthlyAccountingRepository.updateById(accounting?.id, {
+  //     honorary,
+  //   });
+
+  //   // Eliminar todos los registros de clientes en sociedad asociados a esta contabilidad mensual
+  //   await this.clientInSocietyRepository.deleteAll({
+  //     monthlyAccountingId: accounting?.id,
+  //   });
+  // }
+
+  formatLocalDateForDB(date: Date) {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
   async getCustomerExpereFIEL() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Inicio del día actual
-    console.log(today.toString(), 'today');
+    today.setHours(0, 0, 0, 0); // inicio del día de hoy
 
-    const threeMonthsFromToday = new Date();
+    const threeMonthsFromToday = new Date(today);
     threeMonthsFromToday.setMonth(threeMonthsFromToday.getMonth() + 3);
-    threeMonthsFromToday.setHours(23, 59, 59, 999); // Fin del día 3 meses después
+    threeMonthsFromToday.setHours(0, 0, 0, 0); // fin del día exacto 3 meses después
+    console.log(today.toISOString(), 'hoy');
+    console.log(
+      threeMonthsFromToday.toISOString().replace('6', '0'),
+      'otro dia',
+    );
 
-    // Buscar todos los que vencen entre hoy y dentro de 3 meses
     return this.customerRepository.find({
       where: {
+        // renewalDate: {
+        //   between: [today.toISOString(), threeMonthsFromToday.toISOString()],
+        // },
+        // renewalDate: threeMonthsFromToday.toISOString().replace('6', '0'),
+
         renewalDate: {
-          between: [today.toString(), threeMonthsFromToday.toString()],
+          between: [
+            today.toISOString().replace('6', '0'),
+            threeMonthsFromToday.toISOString().replace('6', '0'),
+          ],
         },
         notificationSent: false,
       },

@@ -1,4 +1,4 @@
-import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {Customer} from './customer.model';
 
 @model()
@@ -24,7 +24,7 @@ export class Passwords extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
   })
   password: string;
 

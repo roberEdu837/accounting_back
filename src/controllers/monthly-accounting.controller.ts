@@ -23,6 +23,12 @@ import {MonthlyAccounting} from '../models';
 import {CustomerRepository, MonthlyAccountingRepository} from '../repositories';
 import {AccountingService} from '../services/accounting.service';
 import {PdfGeneratorService} from '../services/pdf.service';
+import {
+  DebtsPdfBody,
+  FilterDataMonthlyAccounting,
+  requestBodyDebtsPdf,
+  requestBodyFilterMonthlyAccounting,
+} from '../specs/monthly-accounting.spec';
 //@authenticate('jwt')
 export class MonthlyAccountingController {
   constructor(
@@ -57,6 +63,7 @@ export class MonthlyAccountingController {
         customer.periodicity,
         customer.honorary,
         customer.rfc,
+        customer.isInSociety,
       );
     }
   }
@@ -77,6 +84,7 @@ export class MonthlyAccountingController {
   ): Promise<MonthlyAccounting> {
     return this.monthlyAccountingRepository.findById(id, filter);
   }
+
   @get('/monthly-accountings')
   @response(200, {
     description: 'Array of MonthlyAccounting model instances',
@@ -106,6 +114,7 @@ export class MonthlyAccountingController {
     const accountings = await this.monthlyAccountingRepository.find({
       where: {
         customerId: id,
+        stateObligation: 'REALIZADO',
       },
       include: [
         {
@@ -144,24 +153,6 @@ export class MonthlyAccountingController {
     return debtsCustomer;
   }
 
-  @get('/monthly-accountings/years')
-  @response(200, {
-    description: 'Años únicos de MonthlyAccounting',
-    content: {
-      'application/json': {schema: {type: 'array', items: {type: 'number'}}},
-    },
-  })
-  async getUniqueYears(): Promise<number[]> {
-    const results = await this.monthlyAccountingRepository.find({
-      fields: {year: true}, // solo trae la propiedad year
-    });
-
-    // Extrae solo los años únicos
-    const uniqueYears = [...new Set(results.map(item => item.year))];
-
-    return uniqueYears;
-  }
-
   @patch('/monthly-accountings')
   @response(200, {
     description: 'MonthlyAccounting PATCH success count',
@@ -181,21 +172,34 @@ export class MonthlyAccountingController {
     return this.monthlyAccountingRepository.updateAll(monthlyAccounting, where);
   }
 
-  @get('/monthly-accountings/{id}')
+  @get('/monthly-accountings/has-debts')
   @response(200, {
-    description: 'MonthlyAccounting model instance',
+    description:
+      'Valida si existe alguna contabilidad con pagos incompletos y stateObligation REALIZADO',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(MonthlyAccounting, {includeRelations: true}),
+        schema: {type: 'boolean'},
       },
     },
   })
-  async findById(
-    @param.path.number('id') id: number,
-    @param.filter(MonthlyAccounting, {exclude: 'where'})
-    filter?: FilterExcludingWhere<MonthlyAccounting>,
-  ): Promise<MonthlyAccounting> {
-    return this.monthlyAccountingRepository.findById(id, filter);
+  async hasDebts(): Promise<any> {
+    // Traemos todas las contabilidades con stateObligation REALIZADO y sus pagos
+    const accountings = await this.monthlyAccountingRepository.find({
+      where: {stateObligation: 'REALIZADO'},
+      include: [{relation: 'paymets'}],
+    });
+
+    for (const acc of accountings) {
+      const totalPagado = (acc.paymets ?? []).reduce(
+        (sum, p) => sum + (p.amount ?? 0),
+        0,
+      );
+
+      if (totalPagado < (acc.honorary ?? 0)) {
+        return true; // apenas encuentre una con deuda, devolvemos true
+      }
+    }
+    return false; // si ninguna tiene deuda
   }
 
   @patch('/monthly-accountings/{id}')
@@ -229,38 +233,24 @@ export class MonthlyAccountingController {
     },
   })
   async findFiltered(
-    @requestBody({
-      required: false,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              month: {type: 'number'},
-              search: {type: 'string'},
-              year: {type: 'number'},
-            },
-          },
-        },
-      },
-    })
-    body?: {
-      month?: number;
-      search?: string;
-      year?: number;
-    },
+    @requestBody(requestBodyFilterMonthlyAccounting)
+    body: FilterDataMonthlyAccounting,
   ): Promise<MonthlyAccounting[]> {
-    const month = body?.month;
+    const month = body.month;
     const search = body?.search?.trim();
-    const year = body?.year;
+    const year = body.year;
+    const monthlyPaymentCompleted = body?.monthlyPaymentCompleted;
 
-    const whereFilter: any = {};
+    let whereFilter: any = {};
+    if (monthlyPaymentCompleted !== undefined) {
+      whereFilter.monthlyPaymentCompleted = monthlyPaymentCompleted;
+      whereFilter.stateObligation = 'REALIZADO';
+    }
 
-    if (month !== undefined && year !== undefined) {
+    if (month !== 0) {
       if (month % 2 === 0) {
         // Agrupa el año con el OR de los meses
         whereFilter.and = [
-          {year: year},
           {
             or: [
               {
@@ -277,9 +267,10 @@ export class MonthlyAccountingController {
         ];
       } else {
         whereFilter.month = month;
-        whereFilter.year = year;
       }
-    } else if (year !== undefined) {
+    }
+
+    if (year !== 0) {
       whereFilter.year = year;
     }
 
@@ -325,54 +316,8 @@ export class MonthlyAccountingController {
     },
   })
   async generatePdf(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              name: {type: 'string'},
-              rfc: {type: 'string'},
-              debts: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: {type: 'number'},
-                    total: {type: 'number'},
-                    month: {type: 'number'},
-                    year: {type: 'number'},
-                    honorary: {type: 'number'},
-                    debts: {type: 'number'},
-                  },
-                  required: [
-                    'id',
-                    'total',
-                    'month',
-                    'year',
-                    'honorary',
-                    'debts',
-                  ],
-                },
-              },
-            },
-            required: ['name', 'rfc', 'debts'],
-          },
-        },
-      },
-    })
-    body: {
-      name: string;
-      rfc: string;
-      debts: {
-        id: number;
-        total: number;
-        month: number;
-        year: number;
-        honorary: number;
-        debts: number;
-      }[];
-    },
+    @requestBody(requestBodyDebtsPdf)
+    body: DebtsPdfBody,
     @inject(RestBindings.Http.RESPONSE) res: Response,
   ): Promise<Response> {
     const pdfBuffer = await this.pdfService.generateAccountStatement2(body);

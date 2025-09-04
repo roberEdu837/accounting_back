@@ -13,6 +13,7 @@ export class MyCronJob extends CronJob {
       name: 'EmailJob',
       onTick: async () => {
         const users = await this.customerService.getCustomerExpereFIEL();
+        console.log(users, 'USUARIO');
         users?.map(async customer => {
           await this.emailService.sendEmail(
             'ch190116079@chapala.tecmm.edu.mx',

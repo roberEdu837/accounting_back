@@ -48,6 +48,9 @@ export class PaymetController {
     })
     paymet: Omit<Paymet, 'id'>,
   ): Promise<Paymet> {
+    //Si el flag viene en true, aditar monthlyPaymentCompleted, de la contabilidad
+    //del mes
+
     return this.paymetRepository.create(paymet);
   }
 

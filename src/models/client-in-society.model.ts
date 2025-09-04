@@ -26,6 +26,13 @@ export class ClientInSociety extends Entity {
   })
   status: boolean;
 
+  @property({
+    type: 'number',
+    required: false,
+    default: 0,
+  })
+  amount: number;
+
   @belongsTo(() => MonthlyAccounting)
   monthlyAccountingId: number;
 

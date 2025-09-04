@@ -2,7 +2,6 @@ import {
   Count,
   CountSchema,
   Filter,
-  FilterExcludingWhere,
   repository,
   Where,
 } from '@loopback/repository';
@@ -16,12 +15,21 @@ import {
   response,
 } from '@loopback/rest';
 import {ClientInSociety} from '../models';
-import {ClientInSocietyRepository} from '../repositories';
+import {
+  ClientInSocietyRepository,
+  MonthlyAccountingRepository,
+} from '../repositories';
+import {
+  FilterDataClientInSociety,
+  requestBodyFilterClientInSociety,
+} from '../specs/client-in-society.spec';
 
 export class ClientInSocietyController {
   constructor(
     @repository(ClientInSocietyRepository)
     public clientInSocietyRepository: ClientInSocietyRepository,
+    @repository(MonthlyAccountingRepository)
+    public monthlyAccountingRepository: MonthlyAccountingRepository,
   ) {}
 
   @post('/client-in-societies')
@@ -42,29 +50,32 @@ export class ClientInSocietyController {
     })
     clientInSociety: Omit<ClientInSociety, 'id'>,
   ): Promise<ClientInSociety> {
-    const {monthlyAccountingId} = clientInSociety;
+    const accounting = await this.monthlyAccountingRepository.findById(
+      clientInSociety.monthlyAccountingId,
+    );
 
-    const existing = await this.clientInSocietyRepository.findOne({
-      where: {monthlyAccountingId},
-      include: [
-        {
-          relation: 'monthlyAccounting',
-          scope: {
-            include: [
-              {
-                relation: 'customer',
-              },
-            ],
-          },
-        },
-      ],
+    // Buscar registros existentes
+    const clientsInSociety = await this.clientInSocietyRepository.find({
+      where: {
+        monthlyAccountingId: clientInSociety.monthlyAccountingId,
+      },
     });
 
-    if (existing) {
-      console.log('Ya existe un registro para este cliente en este mes');
-      throw new Error('Ya existe un registro para este cliente en este mes');
+    // Si ya existen registros, calculamos lo restante
+    if (clientsInSociety.length > 0) {
+      const totalAssigned = clientsInSociety.reduce(
+        (sum, client) => sum + (client.amount ?? 0),
+        0,
+      );
+
+      // Ajustar el amount para el nuevo registro
+      clientInSociety.amount = accounting.honorary - totalAssigned;
+    } else {
+      // Si no hay registros, el amount es igual al honorario completo
+      clientInSociety.amount = accounting.honorary;
     }
 
+    // Crear el nuevo registro
     return this.clientInSocietyRepository.create(clientInSociety);
   }
 
@@ -81,42 +92,61 @@ export class ClientInSocietyController {
     },
   })
   async findFilteredClientInSociety(
-    @requestBody({
-      required: false,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              month: {type: 'number'},
-              search: {type: 'string'},
-              year: {type: 'number'},
-              status: {type: 'boolean'},
-            },
-          },
-        },
-      },
-    })
-    body?: {
-      month?: number;
-      search?: string;
-      year?: number;
-      status?: boolean;
-    },
+    @requestBody(requestBodyFilterClientInSociety)
+    body: FilterDataClientInSociety,
   ): Promise<ClientInSociety[]> {
-    const month = body?.month;
-    const year = body?.year;
-    const search = body?.search?.trim().toLowerCase();
+    const {month, year, search, status} = body ?? {};
+
+    const where: any = {};
+    if (status !== undefined) {
+      where.status = status;
+    }
+
+    let monthlyWhere: any = {stateObligation: 'REALIZADO', isInSociety: true}; // 👈 solo contabilidades realizadas
+
+    if (month !== 0) {
+      if (month % 2 === 0) {
+        monthlyWhere.and = [
+          {
+            or: [
+              {and: [{month}, {periodicity: 'BIMESTRAL'}]},
+              {and: [{month: month - 1}, {periodicity: 'BIMESTRAL'}]},
+              {and: [{month}, {periodicity: {neq: 'BIMESTRAL'}}]},
+            ],
+          },
+        ];
+      } else {
+        monthlyWhere = {...monthlyWhere, month};
+      }
+    }
+
+    if (year !== 0) {
+      monthlyWhere = {...monthlyWhere, year};
+    }
 
     const filter: Filter<ClientInSociety> = {
+      where,
       order: ['status ASC'],
       include: [
         {
           relation: 'monthlyAccounting',
           scope: {
+            where: monthlyWhere,
             include: [
               {
                 relation: 'customer',
+                scope: {
+                  where: {
+                    ...(search
+                      ? {
+                          or: [
+                            {rfc: {like: `%${search}%`}},
+                            {socialReason: {like: `%${search}%`}},
+                          ],
+                        }
+                      : {}),
+                  },
+                },
               },
             ],
           },
@@ -124,55 +154,11 @@ export class ClientInSocietyController {
       ],
     };
 
-    if (body?.status !== undefined) {
-      filter.where = {status: body.status};
-    }
-
     const results = await this.clientInSocietyRepository.find(filter);
-    const filteredResults = results.filter(item => {
-      const accounting = item.monthlyAccounting;
 
-      if (
-        typeof month === 'number' &&
-        month % 2 === 0 &&
-        month !== 0 &&
-        year !== 0
-      ) {
-        if (accounting?.periodicity === 'BIMESTRAL') {
-          return (
-            accounting?.month === month ||
-            (accounting?.month === month - 1 && accounting.year == year)
-          );
-        } else {
-          return accounting?.month === month && accounting.year === year;
-        }
-      }
-
-      if (typeof month === 'number' && month % 2 !== 0 && month !== 0) {
-        if (typeof year === 'number' && year !== 0) {
-          return accounting?.month === month && accounting.year === year;
-        } else {
-          return accounting?.month === month;
-        }
-      }
-
-      if (typeof year === 'number' && year !== 0) {
-        return accounting?.year === year;
-      }
-
-      return true;
-    });
-
-    if (search) {
-      return filteredResults.filter(item => {
-        const rfc = item.monthlyAccounting?.customer?.rfc ?? '';
-        const name =
-          item.monthlyAccounting?.customer?.socialReason?.toLowerCase() ?? '';
-        return rfc.includes(search) || name.includes(search);
-      });
-    }
-
-    return filteredResults;
+    return results.filter(
+      item => item.monthlyAccounting && item.monthlyAccounting.customer,
+    );
   }
 
   @patch('/client-in-societies')
@@ -209,23 +195,6 @@ export class ClientInSocietyController {
       return true;
     }
     return false;
-  }
-
-  @get('/client-in-societies/{id}')
-  @response(200, {
-    description: 'ClientInSociety model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(ClientInSociety, {includeRelations: true}),
-      },
-    },
-  })
-  async findById(
-    @param.path.number('id') id: number,
-    @param.filter(ClientInSociety, {exclude: 'where'})
-    filter?: FilterExcludingWhere<ClientInSociety>,
-  ): Promise<ClientInSociety> {
-    return this.clientInSocietyRepository.findById(id, filter);
   }
 
   @patch('/client-in-societies/{id}')

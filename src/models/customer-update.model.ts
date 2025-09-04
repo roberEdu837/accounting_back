@@ -58,9 +58,10 @@ export class CustomerUpdate extends Model {
   renewalDate: string;
 
   @property({
-    type: 'date',
+    type: 'boolean',
+    required: true,
   })
-  startOfRelationship?: string;
+  isInSociety?: boolean;
 
   @property({
     type: 'number',

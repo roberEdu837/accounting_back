@@ -66,10 +66,11 @@ export class Customer extends Entity {
   renewalDate: string;
 
   @property({
-    type: 'date',
-    required: false,
+    type: 'boolean',
+    default: false,
+    required: true,
   })
-  startOfRelationship: string;
+  isInSociety: boolean;
 
   @property({
     type: 'boolean',

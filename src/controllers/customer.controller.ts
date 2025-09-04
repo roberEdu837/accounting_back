@@ -1,14 +1,6 @@
 import {service} from '@loopback/core';
+import {Filter, repository} from '@loopback/repository';
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
-} from '@loopback/repository';
-import {
-  get,
   getModelSchemaRef,
   param,
   patch,
@@ -16,10 +8,13 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {omit} from 'lodash';
-import {Customer, CustomerUpdate} from '../models';
+import {Customer} from '../models';
 import {CustomerRepository} from '../repositories';
 import {CustomerService} from '../services/customer.service';
+import {
+  FilterDataCustomer,
+  requestBodyFilterCustomer,
+} from '../specs/customer.spec';
 
 // @authenticate('jwt')
 export class CustomerController {
@@ -51,7 +46,7 @@ export class CustomerController {
     return this.customerRepository.create(customer);
   }
 
-  @get('/customers')
+  @post('/customers/search')
   @response(200, {
     description: 'Array of Customer model instances',
     content: {
@@ -64,72 +59,31 @@ export class CustomerController {
     },
   })
   async find(
-    @param.filter(Customer) filter?: Filter<Customer>,
+    @requestBody(requestBodyFilterCustomer)
+    body: FilterDataCustomer,
   ): Promise<Customer[]> {
-    return this.customerRepository.find(filter);
-  }
+    let whereFilter: any = {};
 
-  @get('/customers/associates')
-  @response(200, {
-    description: 'Array of Customer model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(Customer, {includeRelations: true}),
-        },
-      },
-    },
-  })
-  async find2(
-    @param.filter(Customer) filter?: Filter<Customer>,
-  ): Promise<Customer[]> {
-    const customFilter: Filter<Customer> = {
-      ...filter,
-      where: {
-        ...filter?.where,
-        startOfRelationship: {
-          gte: '2025-03-01T00:00:00Z',
-        },
-      },
+    const search = body?.search?.trim();
+    const isInSociety = body?.isInSociety;
+
+    if (search) {
+      whereFilter.or = [
+        {socialReason: {like: `%${search}%`, options: 'i'}},
+        {rfc: {like: `%${search}%`, options: 'i'}},
+      ];
+    }
+
+    if (isInSociety !== undefined) {
+      whereFilter.isInSociety = isInSociety;
+    }
+
+    const filter: Filter<Customer> = {
+      where: whereFilter,
+      order: ['socialReason ASC'],
     };
-    return this.customerRepository.find(customFilter);
-  }
 
-  @patch('/customers')
-  @response(200, {
-    description: 'Customer PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(CustomerUpdate, {partial: true}),
-        },
-      },
-    })
-    customer: CustomerUpdate,
-    @param.where(Customer) where?: Where<Customer>,
-  ): Promise<Count> {
-    return this.customerRepository.updateAll(customer, where);
-  }
-
-  @get('/customers/{id}')
-  @response(200, {
-    description: 'Customer model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(Customer, {includeRelations: true}),
-      },
-    },
-  })
-  async findById(
-    @param.path.number('id') id: number,
-    @param.filter(Customer, {exclude: 'where'})
-    filter?: FilterExcludingWhere<Customer>,
-  ): Promise<Customer> {
-    return this.customerRepository.findById(id, filter);
+    return this.customerRepository.find(filter);
   }
 
   @patch('/customers/{id}')
@@ -141,26 +95,12 @@ export class CustomerController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(CustomerUpdate, {partial: true}),
+          schema: getModelSchemaRef(Customer, {partial: true}),
         },
       },
     })
-    customer: CustomerUpdate,
+    customer: Customer,
   ): Promise<void> {
-    const customerUpdate = omit(customer, ['month']); // Elimina el campo 'month' del objeto customerUpdate
-    const currentCustomer = await this.customerRepository.findById(id); // Obtiene el cliente actual por ID
-
-    // checa si el honorario es mayor al actual
-    if (customerUpdate.honorary > currentCustomer.honorary) {
-      // Si es mayor, actualiza la contabilidad mensual y elimina los clientes en sociedad
-      await this.customerService.editIfHonorarioGreaterThan(
-        id,
-        customer.month,
-        customer.honorary,
-        customer.periodicity,
-      );
-    }
-    // Actualiza el cliente
-    await this.customerRepository.updateById(id, customerUpdate);
+    await this.customerRepository.updateById(id, customer);
   }
 }

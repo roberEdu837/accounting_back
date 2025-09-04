@@ -66,6 +66,20 @@ export class MonthlyAccounting extends Entity {
   })
   rfcTaxPaymentDate: string;
 
+  @property({
+    type: 'boolean',
+    required: true,
+    default: false,
+  })
+  isInSociety: boolean;
+
+  @property({
+    type: 'boolean',
+    required: true,
+    default: false,
+  })
+  monthlyPaymentCompleted: boolean;
+
   @belongsTo(() => Customer)
   customerId: number;
 
@@ -82,7 +96,6 @@ export class MonthlyAccounting extends Entity {
 // ✅ Relaciones declaradas correctamente
 export interface MonthlyAccountingRelations {
   customer?: Customer;
-  // otras relaciones si las tienes...
 }
 
 export type MonthlyAccountingWithRelations = MonthlyAccounting &

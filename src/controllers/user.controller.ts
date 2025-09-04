@@ -19,7 +19,6 @@ import {
   response,
 } from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import _ from 'lodash';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
@@ -28,8 +27,7 @@ import {
 import {User} from '../models';
 import {Credentials, UserRepository} from '../repositories';
 import {PasswordHasher} from '../services/hash.password.bcryptjs';
-import {validateCredentials} from '../services/validator';
-import {userRegisterData} from './specs/user.specs';
+import {userRegisterData} from '../specs/user.specs';
 
 export class UserController {
   constructor(
@@ -86,23 +84,37 @@ export class UserController {
     userData: userRegisterData,
   ): Promise<User> {
     // Create a new user instance using the provided data
-    const user = _.pick(userData, ['username', 'password', 'email', 'name']);
-    validateCredentials(user);
+    //const user = _.pick(userData, ['username', 'password', 'email', 'name']);
+    //validateCredentials(user);
     const newUser = {
       username: userData.username,
       email: userData.email,
       name: userData.name,
     };
     const password = await this.passwordHasher.hashPassword(userData.password);
+
     const foundUser = await this.userRepository.findOne({
-      where: {email: userData.email},
+      where: {
+        or: [
+          {email: userData.email},
+          {username: userData.username}, // aquí corregí: userData.username
+        ],
+      },
     });
 
     if (foundUser) {
-      throw new HttpErrors.UnprocessableEntity(
-        'Usuario ya registrado con este email',
-      );
+      if (foundUser.email === userData.email) {
+        throw new HttpErrors.UnprocessableEntity(
+          'Usuario ya registrado con este email',
+        );
+      }
+      if (foundUser.username === userData.username) {
+        throw new HttpErrors.UnprocessableEntity(
+          'Usuario ya registrado con este nombre de usuario',
+        );
+      }
     }
+
     const saveUser = await this.userRepository.create(newUser);
 
     await this.userRepository.userCredentials(saveUser.id).create({
