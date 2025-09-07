@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import pdfmake from 'pdfmake';
 import {TDocumentDefinitions} from 'pdfmake/interfaces';
+import {PaymentsPdfBody} from '../specs/monthly-accounting.spec';
+import {formatDatePrettyFromString} from '../utils/formatDate';
 
 @injectable()
 export class PdfGeneratorService {
@@ -147,18 +149,7 @@ export class PdfGeneratorService {
     });
   }
 
-  async generateAccountStatement2(data: {
-    name: string;
-    rfc: string;
-    debts: {
-      id: number;
-      total: number;
-      month: number;
-      year: number;
-      honorary: number;
-      debts: number;
-    }[];
-  }): Promise<Buffer> {
+  async generatePaymentsStatement(data: PaymentsPdfBody): Promise<Buffer> {
     const fonts = {
       Roboto: {
         normal: 'Helvetica',
@@ -172,48 +163,75 @@ export class PdfGeneratorService {
     const logoBase64 = fs.readFileSync(logoPath, {encoding: 'base64'});
     const printer = new pdfmake(fonts);
 
-    const totalHonorarios = data.debts.reduce((sum, d) => sum + d.honorary, 0);
-    const totalPagado = data.debts.reduce((sum, d) => sum + d.total, 0);
-    const totalDeuda = data.debts.reduce((sum, d) => sum + d.debts, 0);
     const docDefinition: TDocumentDefinitions = {
       pageMargins: [40, 60, 40, 60] as [number, number, number, number],
       content: [
         {
-          columns: [
+          stack: [
             {
-              image: `data:image/png;base64,${logoBase64}`,
-              width: 100,
-            },
-            {
-              text: 'HR Contadores',
-              alignment: 'right',
-              fontSize: 14,
-              bold: true,
-              margin: [0, 10, 0, 0] as [number, number, number, number],
-            },
-          ],
-        },
-        {
-          text: 'Estado de Deudas',
-          style: 'title',
-        },
-        {
-          columns: [
-            {
-              width: '60%',
-              stack: [
-                {text: `Cliente: ${data.name}`},
-                {text: `RFC: ${data.rfc}`},
+              columns: [
+                {
+                  text: 'HR CONTADORES',
+                  alignment: 'left',
+                  margin: [0, 0, 0, 5],
+                },
+                {
+                  text: 'ESTADO DE CUENTA',
+                  alignment: 'right',
+                  color: '#09356f',
+                  margin: [0, 0, 0, 0] as [number, number, number, number],
+                },
               ],
             },
+            {
+              table: {
+                widths: ['auto', '*'], // izquierda: logo, derecha: datos cliente
+                body: [
+                  [
+                    {
+                      image: `data:image/png;base64,${logoBase64}`,
+                      width: 100,
+                      alignment: 'left',
+                      margin: [0, 0, 10, 0],
+                    },
+                    {
+                      stack: [
+                        {
+                          text: `CLIENTE: ${data.customer?.socialReason}`,
+                          margin: [200, 5, 0, 2],
+                          alignment: 'left',
+                        },
+                        {
+                          text: `RFC: ${data.customer?.rfc}`,
+                          margin: [200, 5, 0, 2],
+                          alignment: 'left',
+                        },
+                        {
+                          text: `PERIODO: ${data.month}/${data.year}`,
+                          margin: [200, 5, 0, 2],
+                          alignment: 'left',
+                        },
+                        {
+                          text: `HONORARIOS: ${data.honorary.toFixed(2)}`,
+                          margin: [200, 5, 0, 2],
+                          alignment: 'left',
+                        },
+                      ],
+                      alignment: 'right',
+                    },
+                  ],
+                ],
+              },
+              layout: 'noBorders', // sin bordes visibles
+              margin: [0, 10, 0, 20], // espacio alrededor
+            },
           ],
-          margin: [0, 10, 0, 10] as [number, number, number, number],
         },
+
         {
-          text: 'Detalle de Deudas',
-          style: 'subheader',
+          text: 'DETALLE DE PAGOS',
         },
-        ...(data.debts.length > 0
+        ...(data.paymets.length > 0
           ? [
               {
                 table: {
@@ -222,54 +240,57 @@ export class PdfGeneratorService {
                   body: [
                     [
                       {
-                        text: 'Mes',
+                        text: '# Pago',
                         fillColor: '#09356f',
                         color: 'white',
                         bold: true,
                       },
                       {
-                        text: 'Año',
+                        text: 'Fecha de pago',
                         fillColor: '#09356f',
                         color: 'white',
                         bold: true,
                       },
                       {
-                        text: 'Honorarios',
+                        text: 'Metodo de pago',
                         fillColor: '#09356f',
                         color: 'white',
                         bold: true,
                       },
                       {
-                        text: 'Pagado',
+                        text: 'Monto',
                         fillColor: '#09356f',
                         color: 'white',
                         bold: true,
                       },
                       {
-                        text: 'Deuda',
+                        text: 'Saldo después del pago',
                         fillColor: '#09356f',
                         color: 'white',
                         bold: true,
                       },
                     ],
-                    ...data.debts.map((d, i) => {
+                    ...data.paymets.map((d: any, i: any) => {
                       const shades = ['#dce3f1', '#b3c4e3'];
                       return [
                         {
-                          text: d.month.toString().padStart(2, '0'),
-                          fillColor: shades[i % 2],
-                        },
-                        {text: d.year.toString(), fillColor: shades[i % 2]},
-                        {
-                          text: `$${d.honorary.toFixed(2)}`,
+                          text: d.id?.toString() || '',
                           fillColor: shades[i % 2],
                         },
                         {
-                          text: `$${d.total.toFixed(2)}`,
+                          text: formatDatePrettyFromString(d.paymentDate),
                           fillColor: shades[i % 2],
                         },
                         {
-                          text: `$${d.debts.toFixed(2)}`,
+                          text: `${d.paymentMethod == 0 ? 'Efectivo' : d.paymentMethod == 1 ? 'Transferencia' : 'Retiro sin tarjeta'}`,
+                          fillColor: shades[i % 2],
+                        },
+                        {
+                          text: `$${d.amount.toFixed(2)}`,
+                          fillColor: shades[i % 2],
+                        },
+                        {
+                          text: `$${d.balance.toFixed(2)}`,
                           fillColor: shades[i % 2],
                         },
                       ];
@@ -286,23 +307,10 @@ export class PdfGeneratorService {
                 },
                 margin: [0, 10, 0, 10] as [number, number, number, number],
               },
-              {
-                text: 'Resumen',
-                style: 'subheader',
-                margin: [0, 10, 0, 5] as [number, number, number, number],
-              },
-              {
-                ul: [
-                  `Total honorarios: $${totalHonorarios.toFixed(2)}`,
-                  `Total pagado: $${totalPagado.toFixed(2)}`,
-                  `Total deuda: $${totalDeuda.toFixed(2)}`,
-                ],
-                margin: [0, 0, 0, 10] as [number, number, number, number],
-              },
             ]
           : [
               {
-                text: 'Felicidades, estás al corriente.',
+                text: 'Sin pagos registrados.',
                 italics: true,
                 margin: [0, 10, 0, 10] as [number, number, number, number],
               },

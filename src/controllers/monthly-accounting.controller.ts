@@ -18,16 +18,15 @@ import {
   response,
   RestBindings,
 } from '@loopback/rest';
-import {AccountingDebts, DebtsCustomer} from '../@types/accountingDebts';
 import {MonthlyAccounting} from '../models';
 import {CustomerRepository, MonthlyAccountingRepository} from '../repositories';
 import {AccountingService} from '../services/accounting.service';
 import {PdfGeneratorService} from '../services/pdf.service';
 import {
-  DebtsPdfBody,
   FilterDataMonthlyAccounting,
-  requestBodyDebtsPdf,
+  PaymentsPdfBody,
   requestBodyFilterMonthlyAccounting,
+  requestBodyPaymentsPdf,
 } from '../specs/monthly-accounting.spec';
 //@authenticate('jwt')
 export class MonthlyAccountingController {
@@ -51,7 +50,13 @@ export class MonthlyAccountingController {
   })
   async create(): Promise<void> {
     const customers = await this.customerRepository.find({
-      fields: {id: true, periodicity: true, honorary: true, rfc: true},
+      fields: {
+        id: true,
+        periodicity: true,
+        honorary: true,
+        rfc: true,
+        isInSociety: true,
+      },
       where: {
         status: true,
       },
@@ -105,52 +110,55 @@ export class MonthlyAccountingController {
 
   @get('/monthly-accountings/debts/customer/{id}')
   @response(200, {
-    description: 'Deudas de clientes',
+    description: 'Estado de deudas en PDF',
     content: {
-      'application/json': {schema: {type: 'array', items: {type: 'number'}}},
+      'application/pdf': {
+        schema: {type: 'string', format: 'binary'},
+      },
     },
   })
-  async getDebts(@param.path.number('id') id: number): Promise<DebtsCustomer> {
-    const accountings = await this.monthlyAccountingRepository.find({
-      where: {
-        customerId: id,
-        stateObligation: 'REALIZADO',
-      },
-      include: [
-        {
-          relation: 'paymets',
-        },
-      ],
+  async getDebts(
+    @param.path.number('id') id: number,
+    @inject(RestBindings.Http.RESPONSE) res: Response,
+  ): Promise<Response> {
+    const accounting = await this.monthlyAccountingRepository.findOne({
+      where: {id},
+      include: [{relation: 'paymets'}, {relation: 'customer'}],
     });
 
-    const accountingWithTotals = accountings.map(accounting => {
-      const total =
-        accounting.paymets?.reduce((sum, p) => sum + (p.amount ?? 0), 0) ?? 0;
+    if (!accounting) {
+      res.status(404).send({error: 'No se encontró el registro'});
+      return res;
+    }
 
-      if (accounting.honorary == total) return undefined;
-
-      const debts = accounting.honorary - total;
+    // calcular balance con los pagos
+    let balance = accounting.honorary ?? 0;
+    const paymentsWithBalance = (accounting.paymets ?? []).map(payment => {
+      balance -= payment.amount ?? 0;
       return {
-        id: accounting.id,
-        total,
-        month: accounting.month,
-        year: accounting.year,
+        ...payment,
+        balance,
         honorary: accounting.honorary,
-        debts,
       };
     });
 
-    const customer = await this.customerRepository.findById(id);
-
-    const filter = accountingWithTotals.filter(
-      (item): item is AccountingDebts => item !== undefined,
-    );
-    const debtsCustomer = {
-      name: customer.socialReason,
-      rfc: customer.rfc,
-      debts: filter,
+    const result = {
+      ...accounting,
+      paymets: paymentsWithBalance,
     };
-    return debtsCustomer;
+
+    console.log(result);
+
+    const pdfBuffer = await this.pdfService.generatePaymentsStatement(result);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="estado-de-deudas.pdf"',
+    );
+    res.end(pdfBuffer);
+
+    return res; // ya no hay segundo return
   }
 
   @patch('/monthly-accountings')
@@ -316,11 +324,11 @@ export class MonthlyAccountingController {
     },
   })
   async generatePdf(
-    @requestBody(requestBodyDebtsPdf)
-    body: DebtsPdfBody,
+    @requestBody(requestBodyPaymentsPdf)
+    body: PaymentsPdfBody,
     @inject(RestBindings.Http.RESPONSE) res: Response,
   ): Promise<Response> {
-    const pdfBuffer = await this.pdfService.generateAccountStatement2(body);
+    const pdfBuffer = await this.pdfService.generatePaymentsStatement(body);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(

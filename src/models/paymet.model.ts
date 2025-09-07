@@ -16,10 +16,11 @@ export class Paymet extends Entity {
   amount: number;
 
   @property({
-    type: 'date',
-    required: false,
-    jsonSchema: {
-      format: 'date',
+    type: 'string', // LoopBack lo maneja como texto
+    required: true,
+    mysql: {
+      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
+      columnType: 'date', // 👈 opcional, refuerza que es DATE
     },
   })
   paymentDate: string;
@@ -28,6 +29,12 @@ export class Paymet extends Entity {
     type: 'number',
   })
   monthlyAccountingId?: number;
+
+  @property({
+    type: 'number',
+    required: true,
+  })
+  paymentMethod: number;
 
   constructor(data?: Partial<Paymet>) {
     super(data);

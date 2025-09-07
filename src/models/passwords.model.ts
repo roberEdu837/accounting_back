@@ -28,12 +28,6 @@ export class Passwords extends Entity {
   })
   password: string;
 
-  @property({
-    type: 'string',
-    required: true,
-  })
-  description: string;
-
   @belongsTo(() => Customer)
   customerId: number;
 

@@ -92,10 +92,10 @@ export class CustomerService {
         // renewalDate: threeMonthsFromToday.toISOString().replace('6', '0'),
 
         renewalDate: {
-          between: [
-            today.toISOString().replace('6', '0'),
-            threeMonthsFromToday.toISOString().replace('6', '0'),
-          ],
+          //between: [
+          //today.toISOString().replace('6', '0'),
+          //threeMonthsFromToday.toISOString().replace('6', '0'),
+          //],
         },
         notificationSent: false,
       },

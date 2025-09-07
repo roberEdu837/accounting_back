@@ -1,26 +1,27 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
 
-const config = {
-  name: 'accountingDB',
-  connector: 'mysql',
-  url: 'mysql://root:SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq@crossover.proxy.rlwy.net:36461/accountingDB',
-  // host: 'crossover.proxy.rlwy.net',
-  // port: 36461,
-  // user: 'root',
-  // password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
-  // database: 'accountingDB',
-};
-
 // const config = {
 //   name: 'accountingDB',
 //   connector: 'mysql',
-//   host: 'localhost',
-//   port: 3306,
-//   user: 'root',
-//   password: 'root',
-//   database: 'accounting',
+//   url: 'mysql://root:SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq@crossover.proxy.rlwy.net:36461/accountingDB',
+//   // host: 'crossover.proxy.rlwy.net',
+//   // port: 36461,
+//   // user: 'root',
+//   // password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
+//   // database: 'accountingDB',
 // };
+
+const config = {
+  name: 'accountingDB',
+  connector: 'mysql',
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'root',
+  database: 'accounting',
+  dateStrings: true,
+};
 
 // Observe application's life cycle to disconnect the datasource when
 // application is stopped. This allows the application to be shut down

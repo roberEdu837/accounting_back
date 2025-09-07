@@ -54,14 +54,22 @@ export class Customer extends Entity {
   periodicity: string;
 
   @property({
-    type: 'date',
+    type: 'string', // LoopBack lo maneja como texto
     required: true,
+    mysql: {
+      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
+      columnType: 'date', // 👈 opcional, refuerza que es DATE
+    },
   })
   creationDate: string;
 
   @property({
-    type: 'date',
+    type: 'string', // LoopBack lo maneja como texto
     required: true,
+    mysql: {
+      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
+      columnType: 'date', // 👈 opcional, refuerza que es DATE
+    },
   })
   renewalDate: string;
 

@@ -11,10 +11,11 @@ export class ClientInSociety extends Entity {
   id?: number;
 
   @property({
-    type: 'date',
-    required: false,
-    jsonSchema: {
-      format: 'date',
+    type: 'string', // LoopBack lo maneja como texto
+    required: true,
+    mysql: {
+      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
+      columnType: 'date', // 👈 opcional, refuerza que es DATE
     },
   })
   paymentDate: string;

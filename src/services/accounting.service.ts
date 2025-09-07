@@ -48,18 +48,18 @@ export class AccountingService {
       },
     });
 
+    //Si existe y es BIMESTRAL y es mes par, no hacer nada
     if (existingAccounting) {
       if (
         (existingAccounting?.periodicity === 'BIMESTRAL',
         currentMonth % 2 === 0)
       ) {
-        console.log('Ya existe');
         return;
       }
     }
 
+    //No existe
     if (!existingAccounting) {
-      console.log('No existe');
       this.monthlyAccountingRepository.create(accounting);
     }
   }

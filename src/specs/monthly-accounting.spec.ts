@@ -1,4 +1,5 @@
 import {RequestBodyParserOptions} from '@loopback/rest';
+import {Customer} from '../models';
 
 export const schemaFilterMonthlyAccounting = {
   type: 'object',
@@ -27,47 +28,89 @@ export type FilterDataMonthlyAccounting = {
   monthlyPaymentCompleted?: boolean;
 };
 
-export const schemaDebtsPdf = {
-  type: 'object',
-  required: ['name', 'rfc', 'debts'],
-  properties: {
-    name: {type: 'string'},
-    rfc: {type: 'string'},
-    debts: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['id', 'total', 'month', 'year', 'honorary', 'debts'],
-        properties: {
-          id: {type: 'number'},
-          total: {type: 'number'},
-          month: {type: 'number'},
-          year: {type: 'number'},
-          honorary: {type: 'number'},
-          debts: {type: 'number'},
+export const schemaPaymentsPdf = {
+  type: 'array',
+  items: {
+    type: 'object',
+    required: [
+      'id',
+      'month',
+      'year',
+      'stateObligation',
+      'honorary',
+      'periodicity',
+      'rfcTaxPaymentDate',
+      'isInSociety',
+      'monthlyPaymentCompleted',
+      'customerId',
+      'payments',
+    ],
+    properties: {
+      id: {type: 'number'},
+      month: {type: 'number'},
+      year: {type: 'number'},
+      stateObligation: {type: 'string'},
+      honorary: {type: 'number'},
+      periodicity: {type: 'string'},
+      rfcTaxPaymentDate: {type: 'string', format: 'date-time'},
+      isInSociety: {type: 'boolean'},
+      monthlyPaymentCompleted: {type: 'boolean'},
+      customerId: {type: 'number'},
+      payments: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: [
+            'id',
+            'amount',
+            'paymentDate',
+            'monthlyAccountingId',
+            'paymentMethod',
+            'balance',
+            'honorary',
+          ],
+          properties: {
+            id: {type: 'number'},
+            amount: {type: 'number'},
+            paymentDate: {type: 'string', format: 'date-time'},
+            monthlyAccountingId: {type: 'number'},
+            paymentMethod: {type: 'number'},
+            balance: {type: 'number'},
+            honorary: {type: 'number'},
+          },
         },
       },
     },
   },
 };
 
-export const requestBodyDebtsPdf: Partial<RequestBodyParserOptions> = {
+export const requestBodyPaymentsPdf: Partial<RequestBodyParserOptions> = {
   content: {
     'application/json': {
-      schema: schemaDebtsPdf,
+      schema: schemaPaymentsPdf,
     },
   },
 };
 
-export type DebtsPdfBody = {
-  name: string;
-  rfc: string;
-  debts: {
-    id: number;
-    total: number;
-    month: number;
-    year: number;
+export type PaymentsPdfBody = {
+  id?: number | undefined;
+  month: number;
+  year: number;
+  stateObligation: string;
+  honorary: number;
+  periodicity: string;
+  rfcTaxPaymentDate: string;
+  isInSociety: boolean;
+  monthlyPaymentCompleted: boolean;
+  customerId: number;
+  customer?: Customer;
+  paymets: {
+    id?: number | undefined;
+    amount: number;
+    paymentDate: string;
+    monthlyAccountingId?: number | undefined; // obligatorio
+    paymentMethod: number;
+    balance: number;
     honorary: number;
-    debts: number;
   }[];
 };
