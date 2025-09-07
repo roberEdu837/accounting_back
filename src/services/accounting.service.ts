@@ -2,6 +2,7 @@ import {injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {stateObligation} from '../models';
 import {MonthlyAccountingRepository} from '../repositories';
+import {getPaymentDate} from '../utils/formatDate';
 
 @injectable()
 export class AccountingService {
@@ -63,17 +64,18 @@ export class AccountingService {
       this.monthlyAccountingRepository.create(accounting);
     }
   }
+
   async getPaymentDate(
     rfc: string,
     periodicity: string,
     month: number,
-  ): Promise<Date> {
+  ): Promise<string> {
     const date = await this.getDate();
     let result = new Date(date);
 
     if (periodicity === 'BIMESTRAL') {
       const year = date.getFullYear();
-      return new Date(year, month + 2, 0);
+      return getPaymentDate(new Date(year, month + 2, 0));
     }
 
     let daysAdded = 0;
@@ -89,7 +91,7 @@ export class AccountingService {
         daysAdded++;
       }
     }
-    return result;
+    return getPaymentDate(result);
   }
 
   async getSixthDigit(rfc: string): Promise<number> {
