@@ -8,6 +8,7 @@ import {
   Where,
 } from '@loopback/repository';
 import {
+  del,
   get,
   getModelSchemaRef,
   param,
@@ -104,6 +105,14 @@ export class PaymetController {
     filter?: FilterExcludingWhere<Paymet>,
   ): Promise<Paymet> {
     return this.paymetRepository.findById(id, filter);
+  }
+
+  @del('/paymets/{id}')
+  @response(204, {
+    description: 'Paymet DELETE success',
+  })
+  async deleteById(@param.path.number('id') id: number): Promise<void> {
+    await this.paymetRepository.deleteById(id);
   }
 
   @patch('/paymets/{id}')

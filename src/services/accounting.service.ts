@@ -21,7 +21,7 @@ export class AccountingService {
     const today = new Date();
     let month = today.getMonth(); // Enero es 0, Diciembre es 11
     let currentMonth = today.getMonth() + 1;
-    let year = 2026;
+    let year = today.getFullYear();
     let currentYear = year;
 
     if (periodicity === 'BIMESTRAL') {
