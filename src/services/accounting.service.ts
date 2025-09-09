@@ -108,7 +108,7 @@ export class AccountingService {
   }
 
   async getDate(year: number, month: number): Promise<Date> {
-    const today = new Date(year, month - 1);
+    const today = new Date(year, month);
     return new Date(today.getFullYear(), today.getMonth(), 17);
   }
 
