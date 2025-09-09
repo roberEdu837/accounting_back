@@ -19,7 +19,7 @@ export class AccountingService {
     isInSociety: boolean,
   ): Promise<void> {
     const today = new Date();
-    let month = today.getMonth(); // Enero es 0, Diciembre es 11
+    let month = today.getMonth();
     let currentMonth = today.getMonth() + 1;
     let year = today.getFullYear();
     let currentYear = year;
@@ -55,7 +55,7 @@ export class AccountingService {
 
     const existingAccounting = await this.monthlyAccountingRepository.findOne({
       where: {
-        customerId: customerId,
+        customerId,
         month: currentMonth,
         year: month === 1 ? currentYear - 1 : currentYear,
       },
