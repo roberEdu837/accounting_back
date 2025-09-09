@@ -41,16 +41,14 @@ export class MonthlyAccountingController {
     protected pdfService: PdfGeneratorService,
   ) {}
 
-  @post('/monthly-accountings/{id}/generate')
+  @post('/monthly-accountings/generate')
   @response(200, {
     description: 'MonthlyAccounting model instance',
     content: {
       'application/json': {schema: getModelSchemaRef(MonthlyAccounting)},
     },
   })
-  async create(
-    @param.path.number('id') id: typeof MonthlyAccounting.prototype.id,
-  ): Promise<void> {
+  async create(): Promise<void> {
     const customers = await this.customerRepository.find({
       fields: {
         id: true,
@@ -71,7 +69,6 @@ export class MonthlyAccountingController {
         customer.honorary,
         customer.rfc,
         customer.isInSociety,
-        id,
       );
     }
   }

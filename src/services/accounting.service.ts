@@ -17,11 +17,10 @@ export class AccountingService {
     honorary: number,
     rfc: string,
     isInSociety: boolean,
-    month?: number,
   ): Promise<void> {
     const today = new Date();
-
-    let currentMonth = month ? month : today.getMonth() + 1;
+    let month = today.getMonth(); // Enero es 0, Diciembre es 11
+    let currentMonth = today.getMonth() + 1;
     let year = 2026;
     let currentYear = year;
 
