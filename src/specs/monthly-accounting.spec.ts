@@ -99,7 +99,6 @@ export type PaymentsPdfBody = {
   stateObligation: string;
   honorary: number;
   periodicity: string;
-  //: string;
   isInSociety: boolean;
   monthlyPaymentCompleted: boolean;
   customerId: number;

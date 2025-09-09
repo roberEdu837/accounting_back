@@ -108,7 +108,7 @@ export class MonthlyAccountingController {
     return this.monthlyAccountingRepository.find(filter);
   }
 
-  @get('/monthly-accountings/debts/customer/{id}')
+  @get('/monthly-accountings/debts/customer/{id}/pdf/month/{month}')
   @response(200, {
     description: 'Estado de deudas en PDF',
     content: {
@@ -119,10 +119,11 @@ export class MonthlyAccountingController {
   })
   async getDebts(
     @param.path.number('id') id: number,
+    @param.path.number('month') month: number,
     @inject(RestBindings.Http.RESPONSE) res: Response,
   ): Promise<Response> {
     const accounting = await this.monthlyAccountingRepository.findOne({
-      where: {id},
+      where: {customerId: id, month: month},
       include: [{relation: 'paymets'}, {relation: 'customer'}],
     });
 
@@ -146,8 +147,6 @@ export class MonthlyAccountingController {
       ...accounting,
       paymets: paymentsWithBalance,
     };
-
-    console.log(result);
 
     const pdfBuffer = await this.pdfService.generatePaymentsStatement(result);
 

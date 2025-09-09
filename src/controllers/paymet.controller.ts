@@ -3,7 +3,6 @@ import {
   Count,
   CountSchema,
   Filter,
-  FilterExcludingWhere,
   repository,
   Where,
 } from '@loopback/repository';
@@ -15,9 +14,7 @@ import {
   patch,
   post,
   requestBody,
-  Response,
   response,
-  RestBindings,
 } from '@loopback/rest';
 import {Paymet} from '../models/paymet.model';
 import {PaymetRepository} from '../repositories';
@@ -49,9 +46,6 @@ export class PaymetController {
     })
     paymet: Omit<Paymet, 'id'>,
   ): Promise<Paymet> {
-    //Si el flag viene en true, aditar monthlyPaymentCompleted, de la contabilidad
-    //del mes
-
     return this.paymetRepository.create(paymet);
   }
 
@@ -90,105 +84,11 @@ export class PaymetController {
     return this.paymetRepository.updateAll(paymet, where);
   }
 
-  @get('/paymets/{id}')
-  @response(200, {
-    description: 'Paymet model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(Paymet, {includeRelations: true}),
-      },
-    },
-  })
-  async findById(
-    @param.path.number('id') id: number,
-    @param.filter(Paymet, {exclude: 'where'})
-    filter?: FilterExcludingWhere<Paymet>,
-  ): Promise<Paymet> {
-    return this.paymetRepository.findById(id, filter);
-  }
-
   @del('/paymets/{id}')
   @response(204, {
     description: 'Paymet DELETE success',
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.paymetRepository.deleteById(id);
-  }
-
-  @patch('/paymets/{id}')
-  @response(204, {
-    description: 'Paymet PATCH success',
-  })
-  async updateById(
-    @param.path.number('id') id: number,
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Paymet, {partial: true}),
-        },
-      },
-    })
-    paymet: Paymet,
-  ): Promise<void> {
-    await this.paymetRepository.updateById(id, paymet);
-  }
-
-  @post('/statement')
-  @response(200, {
-    description: 'PDF generado',
-    content: {
-      'application/pdf': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  async generatePdf(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              customerName: {type: 'string'},
-              rfc: {type: 'string'},
-              period: {type: 'string'},
-              payments: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    paymentDate: {type: 'string'},
-                    amount: {type: 'number'},
-                  },
-                  required: ['paymentDate', 'amount'],
-                },
-              },
-            },
-            required: ['customerName', 'rfc', 'period', 'payments'],
-          },
-        },
-      },
-    })
-    body: {
-      customerName: string;
-      rfc: string;
-      period: string;
-      payments: {paymentDate: string; amount: number}[];
-    },
-    @inject(RestBindings.Http.RESPONSE) res: Response,
-  ): Promise<Response> {
-    const pdfBuffer = await this.pdfService.generateAccountStatement(body);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      'inline; filename="estado-cuenta.pdf"',
-    );
-    res.end(pdfBuffer);
-
-    return res;
   }
 }
