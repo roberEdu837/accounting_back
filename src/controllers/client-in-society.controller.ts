@@ -1,10 +1,4 @@
-import {
-  Count,
-  CountSchema,
-  Filter,
-  repository,
-  Where,
-} from '@loopback/repository';
+import {Filter, repository} from '@loopback/repository';
 import {
   get,
   getModelSchemaRef,
@@ -159,25 +153,6 @@ export class ClientInSocietyController {
     return results.filter(
       item => item.monthlyAccounting && item.monthlyAccounting.customer,
     );
-  }
-
-  @patch('/client-in-societies')
-  @response(200, {
-    description: 'ClientInSociety PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(ClientInSociety, {partial: true}),
-        },
-      },
-    })
-    clientInSociety: ClientInSociety,
-    @param.where(ClientInSociety) where?: Where<ClientInSociety>,
-  ): Promise<Count> {
-    return this.clientInSocietyRepository.updateAll(clientInSociety, where);
   }
 
   @get('/client-in-societies/associated-debts')

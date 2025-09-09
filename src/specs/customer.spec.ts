@@ -6,6 +6,7 @@ export const schemaFilterCustomer = {
   properties: {
     search: {type: 'string'},
     isInSociety: {type: 'boolean'},
+    status: {type: 'boolean'},
   },
 };
 
@@ -20,4 +21,5 @@ export const requestBodyFilterCustomer: Partial<RequestBodyParserOptions> = {
 export type FilterDataCustomer = {
   search?: string;
   isInSociety?: boolean;
+  status?: boolean;
 };

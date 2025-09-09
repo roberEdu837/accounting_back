@@ -1,19 +1,9 @@
 import {TokenService, UserService} from '@loopback/authentication';
 import {inject} from '@loopback/core';
+import {repository} from '@loopback/repository';
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
-} from '@loopback/repository';
-import {
-  get,
   getModelSchemaRef,
   HttpErrors,
-  param,
-  patch,
   post,
   requestBody,
   response,
@@ -83,9 +73,6 @@ export class UserController {
     })
     userData: userRegisterData,
   ): Promise<User> {
-    // Create a new user instance using the provided data
-    //const user = _.pick(userData, ['username', 'password', 'email', 'name']);
-    //validateCredentials(user);
     const newUser = {
       username: userData.username,
       email: userData.email,
@@ -121,75 +108,6 @@ export class UserController {
       password,
     });
     return saveUser;
-  }
-
-  @get('/users')
-  @response(200, {
-    description: 'Array of User model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(User, {includeRelations: true}),
-        },
-      },
-    },
-  })
-  async find(@param.filter(User) filter?: Filter<User>): Promise<User[]> {
-    return this.userRepository.find(filter);
-  }
-
-  @patch('/users')
-  @response(200, {
-    description: 'User PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(User, {partial: true}),
-        },
-      },
-    })
-    user: User,
-    @param.where(User) where?: Where<User>,
-  ): Promise<Count> {
-    return this.userRepository.updateAll(user, where);
-  }
-
-  @get('/users/{id}')
-  @response(200, {
-    description: 'User model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(User, {includeRelations: true}),
-      },
-    },
-  })
-  async findById(
-    @param.path.number('id') id: number,
-    @param.filter(User, {exclude: 'where'}) filter?: FilterExcludingWhere<User>,
-  ): Promise<User> {
-    return this.userRepository.findById(id, filter);
-  }
-
-  @patch('/users/{id}')
-  @response(204, {
-    description: 'User PATCH success',
-  })
-  async updateById(
-    @param.path.number('id') id: number,
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(User, {partial: true}),
-        },
-      },
-    })
-    user: User,
-  ): Promise<void> {
-    await this.userRepository.updateById(id, user);
   }
 
   @post('users/login')

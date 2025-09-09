@@ -1,12 +1,5 @@
 import {inject, service} from '@loopback/core';
-import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
-} from '@loopback/repository';
+import {Filter, repository} from '@loopback/repository';
 import {
   get,
   getModelSchemaRef,
@@ -24,9 +17,7 @@ import {AccountingService} from '../services/accounting.service';
 import {PdfGeneratorService} from '../services/pdf.service';
 import {
   FilterDataMonthlyAccounting,
-  PaymentsPdfBody,
   requestBodyFilterMonthlyAccounting,
-  requestBodyPaymentsPdf,
 } from '../specs/monthly-accounting.spec';
 //@authenticate('jwt')
 export class MonthlyAccountingController {
@@ -71,41 +62,6 @@ export class MonthlyAccountingController {
         customer.isInSociety,
       );
     }
-  }
-
-  @get('/monthly-accountings/{id}')
-  @response(200, {
-    description: 'MonthlyAccounting model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(MonthlyAccounting, {includeRelations: true}),
-      },
-    },
-  })
-  async findBy(
-    @param.path.number('id') id: number,
-    @param.filter(MonthlyAccounting, {exclude: 'where'})
-    filter?: FilterExcludingWhere<MonthlyAccounting>,
-  ): Promise<MonthlyAccounting> {
-    return this.monthlyAccountingRepository.findById(id, filter);
-  }
-
-  @get('/monthly-accountings')
-  @response(200, {
-    description: 'Array of MonthlyAccounting model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(MonthlyAccounting, {includeRelations: true}),
-        },
-      },
-    },
-  })
-  async find(
-    @param.filter(MonthlyAccounting) filter?: Filter<MonthlyAccounting>,
-  ): Promise<MonthlyAccounting[]> {
-    return this.monthlyAccountingRepository.find(filter);
   }
 
   @get('/monthly-accountings/debts/customer/{id}/pdf/month/{month}')
@@ -158,25 +114,6 @@ export class MonthlyAccountingController {
     res.end(pdfBuffer);
 
     return res;
-  }
-
-  @patch('/monthly-accountings')
-  @response(200, {
-    description: 'MonthlyAccounting PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(MonthlyAccounting, {partial: true}),
-        },
-      },
-    })
-    monthlyAccounting: MonthlyAccounting,
-    @param.where(MonthlyAccounting) where?: Where<MonthlyAccounting>,
-  ): Promise<Count> {
-    return this.monthlyAccountingRepository.updateAll(monthlyAccounting, where);
   }
 
   @get('/monthly-accountings/has-debts')
@@ -308,34 +245,5 @@ export class MonthlyAccountingController {
     }
 
     return results;
-  }
-
-  @post('/monthly-accountings/debts')
-  @response(200, {
-    description: 'PDF generado',
-    content: {
-      'application/pdf': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  async generatePdf(
-    @requestBody(requestBodyPaymentsPdf)
-    body: PaymentsPdfBody,
-    @inject(RestBindings.Http.RESPONSE) res: Response,
-  ): Promise<Response> {
-    const pdfBuffer = await this.pdfService.generatePaymentsStatement(body);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      'inline; filename="estado-de-deudas.pdf"',
-    );
-    res.end(pdfBuffer);
-
-    return res;
   }
 }

@@ -64,11 +64,11 @@ export class Customer extends Entity {
   creationDate: string;
 
   @property({
-    type: 'string', // LoopBack lo maneja como texto
+    type: 'string',
     required: true,
     mysql: {
-      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
-      columnType: 'date', // 👈 opcional, refuerza que es DATE
+      dataType: 'date',
+      columnType: 'date',
     },
   })
   renewalDate: string;

@@ -1,13 +1,6 @@
-export * from './client-in-society-customer.controller';
 export * from './customer.controller';
-export * from './monthly-accounting-customer.controller';
-export * from './monthly-accounting-paymet.controller';
 export * from './monthly-accounting.controller';
-export * from './paymet.controller';
-export * from './user-user-credentials.controller';
-export * from './user.controller';
-// export * from './client-in-society.controller';
-export * from './client-in-society-monthly-accounting.controller';
 export * from './notification.controller';
-export * from './passwords-customer.controller';
 export * from './passwords.controller';
+export * from './paymet.controller';
+export * from './user.controller';

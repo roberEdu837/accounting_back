@@ -66,6 +66,11 @@ export class CustomerController {
 
     const search = body?.search?.trim();
     const isInSociety = body?.isInSociety;
+    const status = body?.status;
+
+    if (status !== undefined) {
+      whereFilter.status = status;
+    }
 
     if (search) {
       whereFilter.or = [

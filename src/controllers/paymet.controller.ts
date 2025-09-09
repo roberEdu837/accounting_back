@@ -1,17 +1,10 @@
 import {inject} from '@loopback/core';
-import {
-  Count,
-  CountSchema,
-  Filter,
-  repository,
-  Where,
-} from '@loopback/repository';
+import {Filter, repository} from '@loopback/repository';
 import {
   del,
   get,
   getModelSchemaRef,
   param,
-  patch,
   post,
   requestBody,
   response,
@@ -63,25 +56,6 @@ export class PaymetController {
   })
   async find(@param.filter(Paymet) filter?: Filter<Paymet>): Promise<Paymet[]> {
     return this.paymetRepository.find(filter);
-  }
-
-  @patch('/paymets')
-  @response(200, {
-    description: 'Paymet PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Paymet, {partial: true}),
-        },
-      },
-    })
-    paymet: Paymet,
-    @param.where(Paymet) where?: Where<Paymet>,
-  ): Promise<Count> {
-    return this.paymetRepository.updateAll(paymet, where);
   }
 
   @del('/paymets/{id}')
