@@ -89,11 +89,11 @@ export class ClientInSocietyController {
     @requestBody(requestBodyFilterClientInSociety)
     body: FilterDataClientInSociety,
   ): Promise<ClientInSociety[]> {
-    const {month, year, search, status} = body ?? {};
+    const {month, year, search, monthlyPaymentCompleted} = body ?? {};
 
     const where: any = {};
-    if (status !== undefined) {
-      where.status = status;
+    if (monthlyPaymentCompleted !== undefined) {
+      where.status = monthlyPaymentCompleted;
     }
 
     let monthlyWhere: any = {stateObligation: 'REALIZADO', isInSociety: true}; // 👈 solo contabilidades realizadas

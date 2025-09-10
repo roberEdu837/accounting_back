@@ -7,7 +7,7 @@ export const schemaFilterClientInSociety = {
     month: {type: 'number'},
     year: {type: 'number'},
     search: {type: 'string'},
-    status: {type: 'boolean'},
+    monthlyPaymentCompleted: {type: 'boolean'},
   },
 };
 
@@ -24,5 +24,5 @@ export type FilterDataClientInSociety = {
   month: number;
   year: number;
   search?: string;
-  status?: boolean;
+  monthlyPaymentCompleted?: boolean;
 };

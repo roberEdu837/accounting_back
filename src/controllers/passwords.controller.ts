@@ -3,6 +3,7 @@ import {
   get,
   getModelSchemaRef,
   param,
+  patch,
   post,
   requestBody,
   response,
@@ -58,5 +59,23 @@ export class PasswordsController {
       where: {customerId},
       include: [{relation: 'customer'}],
     });
+  }
+
+  @patch('/passwords/{id}')
+  @response(204, {
+    description: 'Passwords PATCH success',
+  })
+  async updateById(
+    @param.path.number('id') id: number,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Passwords, {partial: true}), // permite solo campos que quieras actualizar
+        },
+      },
+    })
+    passwords: Partial<Passwords>,
+  ): Promise<void> {
+    await this.passwordsRepository.updateById(id, passwords);
   }
 }
