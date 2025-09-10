@@ -29,20 +29,12 @@ export class CustomerService {
 
     const threeMonthsFromToday = new Date(today);
     threeMonthsFromToday.setMonth(threeMonthsFromToday.getMonth() + 3);
-    threeMonthsFromToday.setHours(0, 0, 0, 0); // fin del día exacto 3 meses después
+    threeMonthsFromToday.setHours(23, 59, 59, 999); // fin del día exacto 3 meses después
 
     return this.customerRepository.find({
       where: {
-        // renewalDate: {
-        //   between: [today.toISOString(), threeMonthsFromToday.toISOString()],
-        // },
-        // renewalDate: threeMonthsFromToday.toISOString().replace('6', '0'),
-
         renewalDate: {
-          //between: [
-          //today.toISOString().replace('6', '0'),
-          //threeMonthsFromToday.toISOString().replace('6', '0'),
-          //],
+          between: [today.toISOString(), threeMonthsFromToday.toISOString()],
         },
         notificationSent: false,
       },

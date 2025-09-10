@@ -33,12 +33,6 @@ export class Customer extends Entity {
   honorary: number;
 
   @property({
-    type: 'string',
-    required: true,
-  })
-  password: string;
-
-  @property({
     type: 'boolean',
     default: true,
   })
