@@ -86,7 +86,6 @@ export class MonthlyAccounting extends Entity {
 
   @belongsTo(() => Customer)
   customerId: number;
-
   customer?: Customer;
 
   @hasMany(() => Paymet)

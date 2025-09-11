@@ -4,3 +4,4 @@ export * from './notification.controller';
 export * from './passwords.controller';
 export * from './paymet.controller';
 export * from './user.controller';
+export * from './customer-passwords.controller';

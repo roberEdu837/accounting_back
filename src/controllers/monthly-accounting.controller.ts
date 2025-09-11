@@ -223,6 +223,13 @@ export class MonthlyAccountingController {
       include: [
         {
           relation: 'customer',
+          scope: {
+            include: [
+              {
+                relation: 'passwords', // 👈 aquí incluimos las contraseñas del customer
+              },
+            ],
+          },
         },
         {
           relation: 'paymets',

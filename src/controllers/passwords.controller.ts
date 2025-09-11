@@ -1,6 +1,5 @@
-import {Filter, repository} from '@loopback/repository';
+import {repository} from '@loopback/repository';
 import {
-  get,
   getModelSchemaRef,
   param,
   patch,
@@ -36,29 +35,6 @@ export class PasswordsController {
     passwords: Omit<Passwords, 'id'>,
   ): Promise<Passwords> {
     return this.passwordsRepository.create(passwords);
-  }
-
-  @get('/passwords/{customerId}')
-  @response(200, {
-    description: 'Array of Passwords model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(Passwords, {includeRelations: true}),
-        },
-      },
-    },
-  })
-  async find(
-    @param.path.number('customerId') customerId: number,
-    @param.filter(Passwords) filter?: Filter<Passwords>,
-  ): Promise<Passwords[]> {
-    return this.passwordsRepository.find({
-      ...filter,
-      where: {customerId},
-      include: [{relation: 'customer'}],
-    });
   }
 
   @patch('/passwords/{id}')

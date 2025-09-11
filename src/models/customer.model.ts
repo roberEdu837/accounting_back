@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Passwords} from './passwords.model';
 
 export enum periodicity {
   MENSUAL = 'MENSUAL',
@@ -79,6 +80,10 @@ export class Customer extends Entity {
     default: false,
   })
   notificationSent?: boolean;
+
+  @hasMany(() => Passwords)
+  passwords: Passwords[];
+
   constructor(data?: Partial<Customer>) {
     super(data);
   }

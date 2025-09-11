@@ -86,6 +86,7 @@ export class CustomerController {
     const filter: Filter<Customer> = {
       where: whereFilter,
       order: ['socialReason ASC'],
+      include: [{relation: 'passwords'}],
     };
 
     const customers = await this.customerRepository.find(filter);
