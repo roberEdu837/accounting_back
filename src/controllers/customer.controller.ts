@@ -61,7 +61,7 @@ export class CustomerController {
   async find(
     @requestBody(requestBodyFilterCustomer)
     body: FilterDataCustomer,
-  ): Promise<Customer[]> {
+  ): Promise<object[]> {
     let whereFilter: any = {};
 
     const search = body?.search?.trim();
@@ -88,7 +88,18 @@ export class CustomerController {
       order: ['socialReason ASC'],
     };
 
-    return this.customerRepository.find(filter);
+    const customers = await this.customerRepository.find(filter);
+
+    // 🔹 Convertimos las fechas a string YYYY-MM-DD
+    return customers.map(c => ({
+      ...c,
+      creationDate: c.creationDate
+        ? new Date(c.creationDate).toISOString().split('T')[0]
+        : null,
+      renewalDate: c.renewalDate
+        ? new Date(c.renewalDate).toISOString().split('T')[0]
+        : null,
+    }));
   }
 
   @patch('/customers/{id}')
