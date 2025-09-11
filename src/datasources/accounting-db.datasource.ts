@@ -10,6 +10,7 @@ const config = {
   // user: 'root',
   // password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
   // database: 'accountingDB',
+  dateStrings: true,
 };
 
 // const config = {
