@@ -5,11 +5,6 @@ const config = {
   name: 'accountingDB',
   connector: 'mysql',
   url: 'mysql://root:SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq@crossover.proxy.rlwy.net:36461/accountingDB',
-  // host: 'crossover.proxy.rlwy.net',
-  // port: 36461,
-  // user: 'root',
-  // password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
-  // database: 'accountingDB',
   dateStrings: true,
 };
 
