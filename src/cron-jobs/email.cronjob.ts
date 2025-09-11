@@ -13,10 +13,9 @@ export class MyCronJob extends CronJob {
       name: 'EmailJob',
       onTick: async () => {
         const users = await this.customerService.getCustomerExpereFIEL();
-        console.log(users, 'USUARIO');
         users?.map(async customer => {
           await this.emailService.sendEmail(
-            'ch190116079@chapala.tecmm.edu.mx',
+            'Hanscontador@hotmail.com',
             'Recordatorio de vencimiento de FIEL',
             `Estimado Hans, le recordamos que la FIEL del cliente "${customer.socialReason}" esta por vencer.`,
           );
