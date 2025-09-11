@@ -1,7 +1,9 @@
+import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {post, requestBody} from '@loopback/rest';
 import {EmailService} from '../services/email.service';
 
+@authenticate('jwt')
 export class NotificationController {
   constructor(
     @inject('services.EmailService')

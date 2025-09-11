@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {
   getModelSchemaRef,
@@ -9,7 +10,7 @@ import {
 } from '@loopback/rest';
 import {Passwords} from '../models';
 import {PasswordsRepository} from '../repositories';
-
+@authenticate('jwt')
 export class PasswordsController {
   constructor(
     @repository(PasswordsRepository)

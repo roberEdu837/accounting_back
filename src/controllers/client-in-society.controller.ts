@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {Filter, repository} from '@loopback/repository';
 import {
   get,
@@ -17,7 +18,7 @@ import {
   FilterDataClientInSociety,
   requestBodyFilterClientInSociety,
 } from '../specs/client-in-society.spec';
-
+@authenticate('jwt')
 export class ClientInSocietyController {
   constructor(
     @repository(ClientInSocietyRepository)

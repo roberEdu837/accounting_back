@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {Filter, repository} from '@loopback/repository';
 import {
@@ -16,7 +17,7 @@ import {
   requestBodyFilterCustomer,
 } from '../specs/customer.spec';
 
-// @authenticate('jwt')
+@authenticate('jwt')
 export class CustomerController {
   constructor(
     @repository(CustomerRepository)

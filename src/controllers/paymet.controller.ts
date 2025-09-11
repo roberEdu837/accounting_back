@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {Filter, repository} from '@loopback/repository';
 import {
@@ -12,7 +13,7 @@ import {
 import {Paymet} from '../models/paymet.model';
 import {PaymetRepository} from '../repositories';
 import {PdfGeneratorService} from '../services/pdf.service';
-//@authenticate('jwt')
+@authenticate('jwt')
 export class PaymetController {
   constructor(
     @repository(PaymetRepository)
