@@ -1,13 +1,24 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
 
+// const config = {
+//   name: 'accountingDB',
+//   connector: 'mysql',
+//   host: 'crossover.proxy.rlwy.net',
+//   port: 36461,
+//   user: 'root',
+//   password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
+//   database: 'accountingDB',
+//   dateStrings: true,
+// };
+
 const config = {
   name: 'accountingDB',
   connector: 'mysql',
-  host: 'crossover.proxy.rlwy.net',
-  port: 36461,
+  host: 'ballast.proxy.rlwy.net',
+  port: 20466,
   user: 'root',
-  password: 'SqiilfJFKAUjVrqvBxLTtUSknFJuNDSq',
+  password: 'NCEiNZQYwIlJPXhxHHeHHSwYRNwyCFsw',
   database: 'accountingDB',
   dateStrings: true,
 };
