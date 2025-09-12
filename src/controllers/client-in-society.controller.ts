@@ -45,32 +45,6 @@ export class ClientInSocietyController {
     })
     clientInSociety: Omit<ClientInSociety, 'id'>,
   ): Promise<ClientInSociety> {
-    const accounting = await this.monthlyAccountingRepository.findById(
-      clientInSociety.monthlyAccountingId,
-    );
-
-    // Buscar registros existentes
-    const clientsInSociety = await this.clientInSocietyRepository.find({
-      where: {
-        monthlyAccountingId: clientInSociety.monthlyAccountingId,
-      },
-    });
-
-    // Si ya existen registros, calculamos lo restante
-    if (clientsInSociety.length > 0) {
-      const totalAssigned = clientsInSociety.reduce(
-        (sum, client) => sum + (client.amount ?? 0),
-        0,
-      );
-
-      // Ajustar el amount para el nuevo registro
-      clientInSociety.amount = accounting.honorary - totalAssigned;
-    } else {
-      // Si no hay registros, el amount es igual al honorario completo
-      clientInSociety.amount = accounting.honorary;
-    }
-
-    // Crear el nuevo registro
     return this.clientInSocietyRepository.create(clientInSociety);
   }
 

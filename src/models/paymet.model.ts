@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasOne} from '@loopback/repository';
+import {ClientInSociety} from './client-in-society.model';
 
 @model()
 export class Paymet extends Entity {
@@ -35,6 +36,9 @@ export class Paymet extends Entity {
     required: true,
   })
   paymentMethod: number;
+
+  @hasOne(() => ClientInSociety)
+  clientInSociety: ClientInSociety;
 
   constructor(data?: Partial<Paymet>) {
     super(data);

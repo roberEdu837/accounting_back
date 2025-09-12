@@ -11,7 +11,7 @@ import {
   response,
 } from '@loopback/rest';
 import {Paymet} from '../models/paymet.model';
-import {PaymetRepository} from '../repositories';
+import {ClientInSocietyRepository, PaymetRepository} from '../repositories';
 import {PdfGeneratorService} from '../services/pdf.service';
 @authenticate('jwt')
 export class PaymetController {
@@ -20,6 +20,8 @@ export class PaymetController {
     public paymetRepository: PaymetRepository,
     @inject('services.PdfGeneratorService')
     protected pdfService: PdfGeneratorService,
+    @repository(ClientInSocietyRepository)
+    public clientInSocietyRepository: ClientInSocietyRepository,
   ) {}
 
   @post('/paymets')
@@ -65,5 +67,8 @@ export class PaymetController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.paymetRepository.deleteById(id);
+    await this.clientInSocietyRepository.deleteAll({
+      paymetId: id,
+    });
   }
 }

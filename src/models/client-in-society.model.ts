@@ -37,6 +37,11 @@ export class ClientInSociety extends Entity {
   @belongsTo(() => MonthlyAccounting)
   monthlyAccountingId: number;
 
+  @property({
+    type: 'number',
+  })
+  paymetId?: number;
+
   constructor(data?: Partial<ClientInSociety>) {
     super(data);
   }
