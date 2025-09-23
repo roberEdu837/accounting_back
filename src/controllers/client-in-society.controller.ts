@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {Filter, repository} from '@loopback/repository';
 import {
   get,
@@ -17,8 +16,10 @@ import {
 import {
   FilterDataClientInSociety,
   requestBodyFilterClientInSociety,
+  requestBodyUpdateClientsInSociety,
+  UpdateManyClientsInSociety,
 } from '../specs/client-in-society.spec';
-@authenticate('jwt')
+//@authenticate('jwt')
 export class ClientInSocietyController {
   constructor(
     @repository(ClientInSocietyRepository)
@@ -163,5 +164,22 @@ export class ClientInSocietyController {
     clientInSociety: ClientInSociety,
   ): Promise<void> {
     await this.clientInSocietyRepository.updateById(id, clientInSociety);
+  }
+
+  @patch('/client-in-societies')
+  @response(204, {
+    description: 'ClientsInSociety PATCH success',
+  })
+  async updateMany(
+    @requestBody(requestBodyUpdateClientsInSociety)
+    body: UpdateManyClientsInSociety,
+  ): Promise<void> {
+    const {ids, fecha} = body;
+    for (const id of ids) {
+      await this.clientInSocietyRepository.updateById(id, {
+        paymentDate: fecha,
+        status: true,
+      });
+    }
   }
 }

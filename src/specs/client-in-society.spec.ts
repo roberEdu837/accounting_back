@@ -26,3 +26,36 @@ export type FilterDataClientInSociety = {
   search?: string;
   monthlyPaymentCompleted?: boolean;
 };
+
+// Schema para el body de update múltiple
+export const schemaUpdateClientsInSociety = {
+  type: 'object',
+  required: ['ids', 'fecha'],
+  properties: {
+    ids: {
+      type: 'array',
+      items: {type: 'number'},
+      description: 'Arreglo de IDs de ClientInSociety a actualizar',
+    },
+    fecha: {
+      type: 'string',
+      format: 'date', // o 'date-time' si es con hora
+      description: 'Nueva fecha que se aplicará a los registros',
+    },
+  },
+};
+
+export const requestBodyUpdateClientsInSociety: Partial<RequestBodyParserOptions> =
+  {
+    content: {
+      'application/json': {
+        schema: schemaUpdateClientsInSociety,
+      },
+    },
+  };
+
+// Tipado en TypeScript para el body
+export type UpdateManyClientsInSociety = {
+  ids: number[];
+  fecha: string;
+};
