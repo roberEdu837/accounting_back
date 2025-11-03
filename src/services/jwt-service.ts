@@ -64,9 +64,7 @@ export class JWTService implements TokenService {
     // Generar el JSON Web Token
     let token: string;
     try {
-      token = await signAsync(userInfoForToken, this.jwtSecret, {
-        expiresIn: Number(this.jwtExpiresIn),
-      });
+      token = await signAsync(userInfoForToken, this.jwtSecret);
     } catch (error) {
       throw new HttpErrors.Unauthorized(`Error al iniciar sesión`);
     }
