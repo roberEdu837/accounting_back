@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {Filter, repository} from '@loopback/repository';
 import {
@@ -20,7 +19,7 @@ import {
   FilterDataMonthlyAccounting,
   requestBodyFilterMonthlyAccounting,
 } from '../specs/monthly-accounting.spec';
-@authenticate('jwt')
+//@authenticate('jwt')
 export class MonthlyAccountingController {
   constructor(
     @repository(MonthlyAccountingRepository)
@@ -227,7 +226,7 @@ export class MonthlyAccountingController {
           scope: {
             include: [
               {
-                relation: 'passwords', // 👈 aquí incluimos las contraseñas del customer
+                relation: 'passwords', // Incluye las contraseñas si es que se buscan por cliente
               },
             ],
           },
