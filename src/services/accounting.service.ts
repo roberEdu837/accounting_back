@@ -57,7 +57,7 @@ export class AccountingService {
       where: {
         customerId,
         month: currentMonth,
-        year: month === 1 ? currentYear - 1 : currentYear,
+        year: year,
       },
     });
 
