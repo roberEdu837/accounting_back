@@ -28,6 +28,7 @@ export class MyCronJob extends CronJob {
           }
         });
       },
+
       cronTime: '*/2 * * * *',
       start: true,
     });
