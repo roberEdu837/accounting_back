@@ -4,25 +4,32 @@ import path from 'path';
 
 @injectable()
 export class EmailService {
-  // Configuración optimizada para servidores en la nube (Railway)
   private transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // false para usar STARTTLS en puerto 587
     auth: {
       user: 'robertoch2027@gmail.com',
       pass: 'iryw wcpo xpou yydt',
     },
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
     socketTimeout: 30000,
+    debug: true,
+    logger: true,
     tls: {
       rejectUnauthorized: false,
+      minVersion: 'TLSv1.2',
     },
   });
 
   async sendEmail(to: string, subject: string, message: string): Promise<void> {
-    const logoPath = path.resolve(__dirname, '../../public/Logo2.png');
+    let logoPath = '';
+    try {
+      logoPath = path.resolve(__dirname, '../../public/Logo2.png');
+    } catch (e) {
+      console.error('Error al resolver la ruta del logo:', e);
+    }
 
     const html = `
       <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
@@ -31,7 +38,6 @@ export class EmailService {
             <h1>Recordatorio de vencimiento de FIEL</h1>
           </div>
           <div style="padding: 30px; text-align: center;">
-            <img src="cid:logoimage" alt="Logo" style="width: 150px; border-radius: 50%; margin-bottom: 20px;" />
             <p style="font-size: 16px; color: #333; line-height: 1.5;">
               ${message}
             </p>
@@ -46,35 +52,34 @@ export class EmailService {
       </div>
     `;
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: '"HR Contadores" <robertoch2027@gmail.com>',
       to: to,
       subject: subject,
       html: html,
-      attachments: [
+    };
+
+    if (logoPath) {
+      mailOptions.attachments = [
         {
           filename: 'Logo2.png',
           path: logoPath,
           cid: 'logoimage',
         },
-      ],
-    };
+      ];
+    }
 
     try {
+      console.log('Iniciando envío de correo...');
       await this.transporter.sendMail(mailOptions);
-      console.log('Correo enviado exitosamente a:', to);
+      console.log('✅ Correo enviado con éxito a:', to);
     } catch (error) {
-      console.error('Error al enviar correo en el servidor:', error);
-      if (error.code === 'ENOENT') {
-        console.warn('El logo no se encontró, reintentando sin imagen...');
-        const basicOptions = {
-          ...mailOptions,
-          attachments: [],
-          html: html.replace('cid:logoimage', ''),
-        };
-        await this.transporter.sendMail(basicOptions);
-      } else {
-        throw error;
+      console.error('❌ Error detallado de Nodemailer:', error);
+
+      if (error.code === 'ETIMEDOUT') {
+        console.error(
+          'CONSEJO: Verifica si Gmail requiere activar "Acceso de apps menos seguras" o si tu App Password es correcto.',
+        );
       }
     }
   }
