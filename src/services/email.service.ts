@@ -1,34 +1,28 @@
 import {injectable} from '@loopback/core';
-import nodemailer from 'nodemailer';
+import fs from 'fs';
 import path from 'path';
+import {Resend} from 'resend';
 
 @injectable()
 export class EmailService {
-  private transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'robertoch2027@gmail.com',
-      pass: 'awck fvlg udon dyyi',
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-    debug: true,
-    logger: true,
-    tls: {
-      rejectUnauthorized: false,
-      minVersion: 'TLSv1.2',
-    },
-  });
+  private resend = new Resend('re_f8h1LZA1_9DcS8gPM7ALReZRarwTg5k6d');
 
   async sendEmail(to: string, subject: string, message: string): Promise<void> {
-    let logoPath = '';
+    const logoPath = path.resolve(__dirname, '../../public/Logo2.png');
+
+    let attachments = [];
     try {
-      logoPath = path.resolve(__dirname, '../../public/Logo2.png');
-    } catch (e) {
-      console.error('Error al resolver la ruta del logo:', e);
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        attachments = [
+          {
+            filename: 'Logo2.png',
+            content: logoBuffer,
+          },
+        ];
+      }
+    } catch (err) {
+      console.error('No se pudo cargar el logo para el adjunto:', err);
     }
 
     const html = `
@@ -52,35 +46,25 @@ export class EmailService {
       </div>
     `;
 
-    const mailOptions: any = {
-      from: '"HR Contadores" <robertoch2027@gmail.com>',
-      to: to,
-      subject: subject,
-      html: html,
-    };
-
-    if (logoPath) {
-      mailOptions.attachments = [
-        {
-          filename: 'Logo2.png',
-          path: logoPath,
-          cid: 'logoimage',
-        },
-      ];
-    }
-
     try {
-      console.log('Iniciando envío de correo...');
-      await this.transporter.sendMail(mailOptions);
-      console.log('✅ Correo enviado con éxito a:', to);
-    } catch (error) {
-      console.error('❌ Error detallado de Nodemailer:', error);
+      const {data, error} = await this.resend.emails.send({
+        // Nota: Resend en modo gratuito solo permite enviar DESDE 'onboarding@resend.dev'
+        // y HACIA tu propio correo verificado.
+        // Para enviar a cualquier persona, debes validar tu dominio en Resend.
+        from: 'HR Contadores <onboarding@resend.dev>',
+        to: 'robertoch2027@gmail.com',
+        subject: subject,
+        html: html,
+        //attachments: attachments,
+      });
 
-      if (error.code === 'ETIMEDOUT') {
-        console.error(
-          'CONSEJO: Verifica si Gmail requiere activar "Acceso de apps menos seguras" o si tu App Password es correcto.',
-        );
+      if (error) {
+        return console.error('❌ Error de Resend:', error);
       }
+
+      console.log('✅ Correo enviado exitosamente vía Resend. ID:', data?.id);
+    } catch (err) {
+      console.error('❌ Error inesperado en EmailService:', err);
     }
   }
 }
