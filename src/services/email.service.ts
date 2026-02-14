@@ -10,7 +10,12 @@ export class EmailService {
   async sendEmail(to: string, subject: string, message: string): Promise<void> {
     const logoPath = path.resolve(__dirname, '../../public/Logo2.png');
 
-    let attachments: {filename: string; content: Buffer; cid: string}[] = [];
+    let attachments: {
+      filename: string;
+      content: Buffer;
+      cid: string;
+      disposition: string;
+    }[] = [];
     try {
       if (fs.existsSync(logoPath)) {
         const logoBuffer = fs.readFileSync(logoPath);
@@ -19,6 +24,7 @@ export class EmailService {
             filename: 'Logo2.png',
             content: logoBuffer,
             cid: 'logoimage',
+            disposition: 'inline',
           },
         ];
       }
@@ -33,8 +39,7 @@ export class EmailService {
             <h1>Recordatorio de vencimiento de FIEL</h1>
           </div>
           <div style="padding: 30px; text-align: center;">
-            <img src="cid:logoimage" alt="Logo" style="width: 150px; border-radius: 50%; margin-bottom: 20px;" />
-            <p style="font-size: 16px; color: #333; line-height: 1.5;">
+          <img src="cid:logoimage" alt="Logo" style="width: 150px; border-radius: 50%; margin-bottom: 20px;" />             <p style="font-size: 16px; color: #333; line-height: 1.5;">
               ${message}
             </p>
             <p style="font-size: 14px; color: #777;">
