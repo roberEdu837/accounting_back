@@ -10,7 +10,7 @@ export class EmailService {
   async sendEmail(to: string, subject: string, message: string): Promise<void> {
     const logoPath = path.resolve(__dirname, '../../public/Logo2.png');
 
-    let attachments = [];
+    let attachments: {filename: string; content: Buffer}[] = [];
     try {
       if (fs.existsSync(logoPath)) {
         const logoBuffer = fs.readFileSync(logoPath);
@@ -48,23 +48,20 @@ export class EmailService {
 
     try {
       const {data, error} = await this.resend.emails.send({
-        // Nota: Resend en modo gratuito solo permite enviar DESDE 'onboarding@resend.dev'
-        // y HACIA tu propio correo verificado.
-        // Para enviar a cualquier persona, debes validar tu dominio en Resend.
         from: 'HR Contadores <onboarding@resend.dev>',
         to: 'robertoch2027@gmail.com',
         subject: subject,
         html: html,
-        //attachments: attachments,
+        attachments: attachments,
       });
 
       if (error) {
-        return console.error('❌ Error de Resend:', error);
+        return console.error(' Error de Resend:', error);
       }
 
-      console.log('✅ Correo enviado exitosamente vía Resend. ID:', data?.id);
+      console.log('Correo enviado exitosamente vía Resend. ID:', data?.id);
     } catch (err) {
-      console.error('❌ Error inesperado en EmailService:', err);
+      console.error('Error inesperado en EmailService:', err);
     }
   }
 }
