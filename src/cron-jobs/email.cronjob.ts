@@ -13,6 +13,7 @@ export class MyCronJob extends CronJob {
       name: 'EmailJob',
       onTick: async () => {
         const users = await this.customerService.getCustomerExpereFIEL();
+        console.log('Usuarios con FIEL por vencer:', users);
         users?.map(async customer => {
           await this.emailService.sendEmail(
             'Hanscontador@hotmail.com',
@@ -27,7 +28,7 @@ export class MyCronJob extends CronJob {
           }
         });
       },
-      cronTime: '0 2 * * *',
+      cronTime: '* * * * *',
       start: true,
     });
   }

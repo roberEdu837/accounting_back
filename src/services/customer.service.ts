@@ -25,11 +25,11 @@ export class CustomerService {
 
   async getCustomerExpereFIEL() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // inicio del día de hoy
+    today.setHours(0, 0, 0, 0);
 
     const threeMonthsFromToday = new Date(today);
     threeMonthsFromToday.setMonth(threeMonthsFromToday.getMonth() + 3);
-    threeMonthsFromToday.setHours(23, 59, 59, 999); // fin del día exacto 3 meses después
+    threeMonthsFromToday.setHours(23, 59, 59, 999);
 
     return this.customerRepository.find({
       where: {
