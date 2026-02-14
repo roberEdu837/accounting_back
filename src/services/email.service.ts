@@ -55,8 +55,8 @@ export class EmailService {
 
     try {
       const {data, error} = await this.resend.emails.send({
-        from: 'HR Contadores <robertoch2027@gmail.com>',
-        to: 'robertoch2027@gmail.com',
+        from: 'HR Contadores <onboarding@resend.dev>',
+        to: to,
         subject: subject,
         html: html,
         attachments: attachments,
