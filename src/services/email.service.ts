@@ -7,10 +7,10 @@ export class EmailService {
   private transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // false para usar STARTTLS en puerto 587
+    secure: false,
     auth: {
       user: 'robertoch2027@gmail.com',
-      pass: 'iryw wcpo xpou yydt',
+      pass: 'awck fvlg udon dyyi',
     },
     connectionTimeout: 30000,
     greetingTimeout: 30000,
