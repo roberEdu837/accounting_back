@@ -79,7 +79,7 @@ export class MonthlyAccountingController {
     @inject(RestBindings.Http.RESPONSE) res: Response,
   ): Promise<Response> {
     const accounting = await this.monthlyAccountingRepository.find({
-      where: {customerId: id},
+      where: {customerId: id, stateObligation: 'REALIZADO'},
       include: [{relation: 'paymets'}],
     });
 
