@@ -1,5 +1,4 @@
 import {RequestBodyParserOptions} from '@loopback/rest';
-import {Customer} from '../models';
 
 export const schemaFilterMonthlyAccounting = {
   type: 'object',
@@ -92,24 +91,22 @@ export const requestBodyPaymentsPdf: Partial<RequestBodyParserOptions> = {
   },
 };
 
-export type PaymentsPdfBody = {
-  id?: number | undefined;
-  month: number;
-  year: number;
-  stateObligation: string;
+type Customer = {
+  socialReason: string;
+  rfc: string;
   honorary: number;
+};
+
+type MonthlyAccounting = {
+  month: number;
+  debt: number;
+  year: number;
   periodicity: string;
-  isInSociety: boolean;
-  monthlyPaymentCompleted: boolean;
-  customerId: number;
-  customer?: Customer;
-  paymets: {
-    id?: number | undefined;
-    amount: number;
-    paymentDate: string;
-    monthlyAccountingId?: number | undefined; // obligatorio
-    paymentMethod: number;
-    balance: number;
-    honorary: number;
-  }[];
+  honorary: number;
+};
+
+export type PaymentsPdfBody = {
+  customer: Customer;
+  totalDebt: number;
+  accountingForMonth: MonthlyAccounting[];
 };

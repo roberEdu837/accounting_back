@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {Filter, repository} from '@loopback/repository';
 import {
@@ -18,9 +17,10 @@ import {AccountingService} from '../services/accounting.service';
 import {PdfGeneratorService} from '../services/pdf.service';
 import {
   FilterDataMonthlyAccounting,
+  PaymentsPdfBody,
   requestBodyFilterMonthlyAccounting,
 } from '../specs/monthly-accounting.spec';
-@authenticate('jwt')
+//@authenticate('jwt')
 export class MonthlyAccountingController {
   constructor(
     @repository(MonthlyAccountingRepository)
@@ -65,7 +65,7 @@ export class MonthlyAccountingController {
     }
   }
 
-  @get('/monthly-accountings/debts/customer/{id}/pdf/month/{month}')
+  @get('/monthly-accountings/debts/customer/{id}/pdf')
   @response(200, {
     description: 'Estado de deudas en PDF',
     content: {
@@ -76,36 +76,54 @@ export class MonthlyAccountingController {
   })
   async getDebts(
     @param.path.number('id') id: number,
-    @param.path.number('month') month: number,
     @inject(RestBindings.Http.RESPONSE) res: Response,
   ): Promise<Response> {
-    const accounting = await this.monthlyAccountingRepository.findOne({
-      where: {customerId: id, month: month},
-      include: [{relation: 'paymets'}, {relation: 'customer'}],
+    const accounting = await this.monthlyAccountingRepository.find({
+      where: {customerId: id},
+      include: [{relation: 'paymets'}],
     });
 
-    if (!accounting) {
+    if (!accounting || accounting.length === 0) {
       res.status(404).send({error: 'No se encontró el registro'});
       return res;
     }
 
-    // calcular balance con los pagos
-    let balance = accounting.honorary ?? 0;
-    const paymentsWithBalance = (accounting.paymets ?? []).map(payment => {
-      balance -= payment.amount ?? 0;
-      return {
-        ...payment,
-        balance,
-        honorary: accounting.honorary,
-      };
-    });
+    const customer = await this.customerRepository.findById(id);
 
-    const result = {
-      ...accounting,
-      paymets: paymentsWithBalance,
+    const accountingForMonth = accounting
+      .map(acc => {
+        const totalPaid = (acc.paymets ?? []).reduce(
+          (sum, p) => sum + (p.amount ?? 0),
+          0,
+        );
+
+        const honorary = acc.honorary ?? 0;
+        return {
+          month: acc.month,
+          debt: honorary - totalPaid,
+          year: acc.year,
+          periodicity: acc.periodicity,
+          honorary,
+        };
+      })
+      .filter(acc => acc.debt > 0);
+
+    const totalDebt = accountingForMonth.reduce(
+      (sum, acc) => sum + acc.debt,
+      0,
+    );
+
+    const data: PaymentsPdfBody = {
+      customer: {
+        rfc: customer.rfc,
+        socialReason: customer.socialReason,
+        honorary: customer.honorary,
+      },
+      totalDebt,
+      accountingForMonth: accountingForMonth,
     };
 
-    const pdfBuffer = await this.pdfService.generatePaymentsStatement(result);
+    const pdfBuffer = await this.pdfService.generatePaymentsStatement(data);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -128,7 +146,6 @@ export class MonthlyAccountingController {
     },
   })
   async hasDebts(): Promise<any> {
-    // Traemos todas las contabilidades con stateObligation REALIZADO y sus pagos
     const accountings = await this.monthlyAccountingRepository.find({
       where: {stateObligation: 'REALIZADO'},
       include: [{relation: 'paymets'}],
@@ -141,10 +158,10 @@ export class MonthlyAccountingController {
       );
 
       if (totalPagado < (acc.honorary ?? 0)) {
-        return true; // apenas encuentre una con deuda, devolvemos true
+        return true;
       }
     }
-    return false; // si ninguna tiene deuda
+    return false;
   }
 
   @patch('/monthly-accountings/{id}')
@@ -194,7 +211,6 @@ export class MonthlyAccountingController {
 
     if (month !== 0) {
       if (month % 2 === 0) {
-        // Agrupa el año con el OR de los meses
         whereFilter.and = [
           {
             or: [
@@ -215,9 +231,7 @@ export class MonthlyAccountingController {
       }
     }
 
-    if (year !== 0) {
-      whereFilter.year = year;
-    }
+    if (year !== 0) whereFilter.year = year;
 
     const filter: Filter<MonthlyAccounting> = {
       where: whereFilter,
@@ -227,7 +241,7 @@ export class MonthlyAccountingController {
           scope: {
             include: [
               {
-                relation: 'passwords', // Incluye las contraseñas si es que se buscan por cliente
+                relation: 'passwords',
               },
             ],
           },
