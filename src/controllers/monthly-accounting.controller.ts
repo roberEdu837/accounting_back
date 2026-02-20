@@ -83,11 +83,6 @@ export class MonthlyAccountingController {
       include: [{relation: 'paymets'}],
     });
 
-    if (!accounting || accounting.length === 0) {
-      res.status(404).send({error: 'No se encontró el registro'});
-      return res;
-    }
-
     const customer = await this.customerRepository.findById(id);
 
     const accountingForMonth = accounting

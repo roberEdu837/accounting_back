@@ -82,7 +82,7 @@ export class PdfGeneratorService {
                   alignment: 'right',
                 },
                 {
-                  text: `$${data.customer?.honorary.toFixed(2)}`,
+                  text: `$${data.customer?.honorary.toLocaleString('es-MX', {minimumFractionDigits: 2})}`,
                   bold: true,
                   alignment: 'right',
                 },
