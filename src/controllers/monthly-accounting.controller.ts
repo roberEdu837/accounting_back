@@ -126,7 +126,6 @@ export class MonthlyAccountingController {
 
     const debtsServices = this.calculator.calculateServicesDebts(filterdServices);
 
-    // console.log(debtsServices, '====')
 
     const totalDebtServices = debtsServices.reduce((acc, item) => acc + item.debt, 0);
 
@@ -139,6 +138,10 @@ export class MonthlyAccountingController {
       0,
     );
 
+    const totalPaid = calculateMonthlyDebts.reduce(
+      (sum, acc) => sum + acc.totalPaid, 0
+    )
+
 
     var total = totalDebt + totalDebtServices;
     const data: PaymentsPdfBody = {
@@ -149,7 +152,8 @@ export class MonthlyAccountingController {
       },
       totalDebt: total,
       accountingForMonth: calculateMonthlyDebts,
-      accountingServices: debtsServices
+      accountingServices: debtsServices,
+      totalPaid
     };
 
     const pdfBuffer = await this.pdfService.generatePaymentsStatement(data);

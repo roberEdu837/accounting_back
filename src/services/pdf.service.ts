@@ -34,7 +34,7 @@ export class PdfGeneratorService {
           {
             table: {
               headerRows: 1,
-              widths: ['*', 'auto', 'auto'], // Exactamente 3 columnas
+              widths: ['*', 'auto', 'auto'],
               body: [
                 [
                   {text: 'CONCEPTO / SERVICIO', style: 'tableHeader'},
@@ -191,6 +191,23 @@ export class PdfGeneratorService {
           table: {
             widths: ['*', 'auto'],
             body: [
+              [
+                {
+                  text: 'TOTAL PAGADO',
+                  bold: true,
+                  fontSize: 12,
+                },
+                {
+                  text: `$${(Number(data.totalPaid) || 0).toLocaleString(
+                    'es-MX',
+                    {minimumFractionDigits: 2},
+                  )}`,
+                  bold: true,
+                  fontSize: 12,
+                  alignment: 'right',
+                  color: '#2e7d32',
+                },
+              ],
               [
                 {
                   text: 'TOTAL PENDIENTE A PAGAR',

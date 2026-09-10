@@ -19,6 +19,7 @@ export interface MonthlyDebtInfo {
   year: number;
   periodicity: string;
   honorary: number;
+  totalPaid: number;
 }
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -42,6 +43,7 @@ export class DebtCalculationService {
           year: acc.year,
           periodicity: acc.periodicity,
           honorary,
+          totalPaid: totalPaid
         };
       })
       .filter(acc => acc.debt > 0);
