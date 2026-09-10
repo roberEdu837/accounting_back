@@ -5,3 +5,5 @@ export * from './passwords.model';
 export * from './paymet.model';
 export * from './user-credentials.model';
 export * from './user.model';
+export * from './services.model';
+export * from './accounting-service.model';

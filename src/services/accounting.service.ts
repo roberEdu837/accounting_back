@@ -9,7 +9,7 @@ export class AccountingService {
   constructor(
     @repository(MonthlyAccountingRepository)
     public monthlyAccountingRepository: MonthlyAccountingRepository,
-  ) {}
+  ) { }
 
   async generateMonthlyAccounting(
     customerId: number | undefined,
@@ -198,3 +198,5 @@ export class AccountingService {
     }
   }
 }
+
+

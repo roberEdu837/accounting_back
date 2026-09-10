@@ -2,7 +2,7 @@ import {injectable} from '@loopback/core';
 import fs from 'fs';
 import path from 'path';
 import pdfmake from 'pdfmake';
-import {TDocumentDefinitions} from 'pdfmake/interfaces';
+import {Content, TDocumentDefinitions} from 'pdfmake/interfaces';
 import {monthsPdf} from '../conts';
 import {PaymentsPdfBody} from '../specs/monthly-accounting.spec';
 
@@ -21,6 +21,71 @@ export class PdfGeneratorService {
     const logoPath = path.resolve(__dirname, '../../public/Logo2.png');
     const logoBase64 = fs.readFileSync(logoPath, {encoding: 'base64'});
     const printer = new pdfmake(fonts);
+
+    const pendingServices = (data.accountingServices || []).filter(
+      (s: any) => (Number(s.debt) || 0) > 0,
+    );
+
+    const servicesTableBlock: Content[] =
+      pendingServices.length > 0
+        ? [
+          {text: '', margin: [0, 10]},
+          {text: 'SERVICIOS ADICIONALES PENDIENTES', style: 'subheader'},
+          {
+            table: {
+              headerRows: 1,
+              widths: ['*', 'auto', 'auto'], // Exactamente 3 columnas
+              body: [
+                [
+                  {text: 'CONCEPTO / SERVICIO', style: 'tableHeader'},
+                  {text: 'MES', style: 'tableHeader'},
+                  {text: 'MONTO', style: 'tableHeader', alignment: 'right'},
+                ],
+                ...pendingServices.map((s: any) => [
+                  {
+                    text: s.name || s.description || 'Servicio Contable',
+                    style: 'tableCell',
+                  },
+                  {
+                    text: `${monthsPdf.find(m => m.value === s.month)?.label ||
+                      s.month ||
+                      'N/A'
+                      }`,
+                    style: 'tableCell',
+                  },
+                  {
+                    text: `$${(Number(s.amount) || 0).toLocaleString(
+                      'es-MX',
+                      {minimumFractionDigits: 2},
+                    )}`,
+                    style: 'tableCell',
+                    alignment: 'right',
+                  },
+                ]),
+              ],
+            },
+            layout: 'lightHorizontalLines',
+          },
+        ]
+        : [];
+
+    const accountingForMonthRows = (data.accountingForMonth || []).map(
+      (d: any) => [
+        {text: 'Honorarios Contables', style: 'tableCell'},
+        {
+          text: `${monthsPdf.find(m => m.value === d.month)?.label || d.month || 'N/A'
+            }`,
+          style: 'tableCell',
+        },
+        {
+          text: `$${(Number(d.debt) || 0).toLocaleString('es-MX', {
+            minimumFractionDigits: 2,
+          })}`,
+          style: 'tableCell',
+          alignment: 'right',
+        },
+      ],
+    );
 
     const docDefinition: TDocumentDefinitions = {
       pageMargins: [40, 40, 40, 140],
@@ -69,8 +134,8 @@ export class PdfGeneratorService {
             {
               stack: [
                 {text: 'CLIENTE', color: '#666', fontSize: 8},
-                {text: data.customer?.socialReason, bold: true},
-                {text: `RFC: ${data.customer?.rfc}`, fontSize: 9},
+                {text: data.customer?.socialReason || 'N/A', bold: true},
+                {text: `RFC: ${data.customer?.rfc || 'N/A'}`, fontSize: 9},
               ],
             },
             {
@@ -82,7 +147,9 @@ export class PdfGeneratorService {
                   alignment: 'right',
                 },
                 {
-                  text: `$${data.customer?.honorary.toLocaleString('es-MX', {minimumFractionDigits: 2})}`,
+                  text: `$${(
+                    Number(data.customer?.honorary) || 0
+                  ).toLocaleString('es-MX', {minimumFractionDigits: 2})}`,
                   bold: true,
                   alignment: 'right',
                 },
@@ -92,7 +159,7 @@ export class PdfGeneratorService {
           margin: [0, 0, 0, 20],
         },
 
-        {text: 'RESUMEN DE SALDOS PENDIENTES', style: 'subheader'},
+        {text: 'RESUMEN DE MESES PENDIENTES', style: 'subheader'},
         {
           table: {
             headerRows: 1,
@@ -103,31 +170,39 @@ export class PdfGeneratorService {
                 {text: 'MES', style: 'tableHeader'},
                 {text: 'IMPORTE', style: 'tableHeader', alignment: 'right'},
               ],
-              ...data.accountingForMonth.map((d: any) => [
-                {text: 'Honorarios Contables', style: 'tableCell'},
-                {
-                  text: `${monthsPdf.find(m => m.value === d.month)?.label}`,
-                  style: 'tableCell',
-                },
-                {
-                  text: `$${d.debt.toLocaleString('es-MX', {minimumFractionDigits: 2})}`,
-                  style: 'tableCell',
-                  alignment: 'right',
-                },
-              ]),
+              ...(accountingForMonthRows.length > 0
+                ? accountingForMonthRows
+                : [
+                  [
+                    {text: 'Sin honorarios pendientes', style: 'tableCell'},
+                    {text: '-', style: 'tableCell'},
+                    {text: '$0.00', style: 'tableCell', alignment: 'right'},
+                  ],
+                ]),
+            ],
+          },
+          layout: 'lightHorizontalLines',
+        },
+
+        ...servicesTableBlock,
+
+        {text: '', margin: [0, 15]},
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: [
               [
                 {
-                  text: 'TOTAL PENDIENTE',
-                  colSpan: 2,
+                  text: 'TOTAL PENDIENTE A PAGAR',
                   bold: true,
-                  margin: [0, 10],
                   fontSize: 12,
                 },
-                {},
                 {
-                  text: `$${data.totalDebt.toLocaleString('es-MX', {minimumFractionDigits: 2})}`,
+                  text: `$${(Number(data.totalDebt) || 0).toLocaleString(
+                    'es-MX',
+                    {minimumFractionDigits: 2},
+                  )}`,
                   bold: true,
-                  margin: [0, 10],
                   fontSize: 12,
                   alignment: 'right',
                   color: '#d32f2f',
@@ -135,10 +210,10 @@ export class PdfGeneratorService {
               ],
             ],
           },
-          layout: 'lightHorizontalLines',
+          layout: 'noBorders',
         },
 
-        {text: '', margin: [0, 20]},
+        {text: '', margin: [0, 15]},
         {
           stack: [
             {

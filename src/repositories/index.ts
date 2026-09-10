@@ -5,3 +5,5 @@ export * from './paymet.repository';
 export * from './user-credentials.repository';
 export * from './user.repository';
 export * from './passwords.repository';
+export * from './services.repository';
+export * from './accounting-service.repository';

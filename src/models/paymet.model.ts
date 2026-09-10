@@ -1,4 +1,5 @@
-import {Entity, model, property, hasOne} from '@loopback/repository';
+import {belongsTo, Entity, hasOne, model, property} from '@loopback/repository';
+import {AccountingService, AccountingServiceWithRelations} from './accounting-service.model';
 import {ClientInSociety} from './client-in-society.model';
 
 @model()
@@ -17,11 +18,11 @@ export class Paymet extends Entity {
   amount: number;
 
   @property({
-    type: 'string', // LoopBack lo maneja como texto
+    type: 'string',
     required: true,
     mysql: {
-      dataType: 'date', // 👈 usa 'dataType' en lugar de 'columnType'
-      columnType: 'date', // 👈 opcional, refuerza que es DATE
+      dataType: 'date',
+      columnType: 'date',
     },
   })
   paymentDate: string;
@@ -40,6 +41,9 @@ export class Paymet extends Entity {
   @hasOne(() => ClientInSociety)
   clientInSociety: ClientInSociety;
 
+  @belongsTo(() => AccountingService)
+  accountingServiceId?: number;
+
   constructor(data?: Partial<Paymet>) {
     super(data);
   }
@@ -47,6 +51,7 @@ export class Paymet extends Entity {
 
 export interface PaymetRelations {
   // describe navigational properties here
+  accountingService?: AccountingServiceWithRelations;
 }
 
 export type PaymetWithRelations = Paymet & PaymetRelations;

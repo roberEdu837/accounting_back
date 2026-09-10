@@ -12,13 +12,13 @@ export const schemaFilterMonthlyAccounting = {
 };
 
 export const requestBodyFilterMonthlyAccounting: Partial<RequestBodyParserOptions> =
-  {
-    content: {
-      'application/json': {
-        schema: schemaFilterMonthlyAccounting,
-      },
+{
+  content: {
+    'application/json': {
+      schema: schemaFilterMonthlyAccounting,
     },
-  };
+  },
+};
 
 export type FilterDataMonthlyAccounting = {
   month: number;
@@ -109,4 +109,18 @@ export type PaymentsPdfBody = {
   customer: Customer;
   totalDebt: number;
   accountingForMonth: MonthlyAccounting[];
+  accountingServices: AccountingServices[];
 };
+
+
+export type AccountingServices = {
+  id: number,
+  description?: string,
+  name: string,
+  amount: number,
+  status: string,
+  monthlyAccountingId: number,
+  servicesId: number,
+  paid: number,
+  debt: number
+}
