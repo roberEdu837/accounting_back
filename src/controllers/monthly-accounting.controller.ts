@@ -214,110 +214,6 @@ export class MonthlyAccountingController {
     await this.monthlyAccountingRepository.updateById(id, monthlyAccounting);
   }
 
-  // @post('/monthly-accountings/search')
-  // @response(200, {
-  //   description: 'Array of MonthlyAccounting model instances with paid and debt calculations',
-  // })
-  // async findFiltered(
-  //   @requestBody(requestBodyFilterMonthlyAccounting)
-  //   body: FilterDataMonthlyAccounting,
-  // ): Promise<any[]> {
-  //   const month = body.month;
-  //   const search = body?.search?.trim();
-  //   const year = body.year;
-  //   const monthlyPaymentCompleted = body?.monthlyPaymentCompleted;
-
-  //   let whereFilter: any = {};
-  //   if (monthlyPaymentCompleted !== undefined) {
-  //     whereFilter.monthlyPaymentCompleted = monthlyPaymentCompleted;
-  //     whereFilter.stateObligation = 'REALIZADO';
-  //   }
-
-  //   if (month !== 0) {
-  //     if (month % 2 === 0) {
-  //       whereFilter.and = [
-  //         {
-  //           or: [
-  //             {
-  //               and: [{month: month}, {periodicity: 'BIMESTRAL'}],
-  //             },
-  //             {
-  //               and: [{month: month - 1}, {periodicity: 'BIMESTRAL'}],
-  //             },
-  //             {
-  //               and: [{month: month}, {periodicity: {neq: 'BIMESTRAL'}}],
-  //             },
-  //           ],
-  //         },
-  //       ];
-  //     } else {
-  //       whereFilter.month = month;
-  //     }
-  //   }
-
-  //   if (year !== 0) whereFilter.year = year;
-
-  //   const filter: Filter<MonthlyAccounting> = {
-  //     where: whereFilter,
-  //     include: [
-  //       {
-  //         relation: 'customer',
-  //         scope: {
-  //           include: [
-  //             {
-  //               relation: 'passwords',
-  //             },
-  //           ],
-  //         },
-  //       },
-  //       {
-  //         relation: 'paymets',
-  //         // scope: {
-  //         //   where: {
-  //         //     accountingServiceId: null,
-  //         //   },
-  //         // },
-  //       },
-  //     ],
-  //     order: ['RfcTaxPaymentDate ASC'],
-  //   };
-
-  //   let results = await this.monthlyAccountingRepository.find(filter);
-
-  //   let services = await this.accountingServiceRepository.find(
-
-  //   )
-
-
-  //   if (search) {
-  //     results = results.filter(item => {
-  //       const rfc = item.customer?.rfc?.toLowerCase() ?? '';
-  //       const name = item.customer?.socialReason?.toLowerCase() ?? '';
-  //       return (
-  //         rfc.includes(search.toLowerCase()) ||
-  //         name.includes(search.toLowerCase())
-  //       );
-  //     });
-  //   }
-
-
-  //   return results.map((item: any) => {
-  //     const itemObj = item.toJSON ? item.toJSON() : item;
-
-  //     const paid = (itemObj.paymets || []).reduce(
-  //       (acc: number, payment: any) => acc + (payment.amount || 0),
-  //       0,
-  //     );
-
-  //     const debt = Math.max(0, (itemObj.honorary || 0) - paid);
-
-  //     return {
-  //       ...itemObj,
-  //       paid,
-  //       debt,
-  //     };
-  //   });
-  // }
 
   @post('/monthly-accountings/search')
   @response(200, {
@@ -381,12 +277,25 @@ export class MonthlyAccountingController {
     let results = await this.monthlyAccountingRepository.find(filter);
 
     if (search) {
+      const normalizedSearch = search
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
       results = results.filter(item => {
-        const rfc = item.customer?.rfc?.toLowerCase() ?? '';
-        const name = item.customer?.socialReason?.toLowerCase() ?? '';
+        const rfc = (item.customer?.rfc ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+
+        const name = (item.customer?.socialReason ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+
         return (
-          rfc.includes(search.toLowerCase()) ||
-          name.includes(search.toLowerCase())
+          rfc.includes(normalizedSearch) ||
+          name.includes(normalizedSearch)
         );
       });
     }
@@ -458,5 +367,6 @@ export class MonthlyAccountingController {
       };
     });
   }
+
 
 }
