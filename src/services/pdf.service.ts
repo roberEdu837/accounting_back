@@ -193,23 +193,6 @@ export class PdfGeneratorService {
             body: [
               [
                 {
-                  text: 'TOTAL PAGADO',
-                  bold: true,
-                  fontSize: 12,
-                },
-                {
-                  text: `$${(Number(data.totalPaid) || 0).toLocaleString(
-                    'es-MX',
-                    {minimumFractionDigits: 2},
-                  )}`,
-                  bold: true,
-                  fontSize: 12,
-                  alignment: 'right',
-                  color: '#2e7d32',
-                },
-              ],
-              [
-                {
                   text: 'TOTAL PENDIENTE A PAGAR',
                   bold: true,
                   fontSize: 12,

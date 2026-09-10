@@ -30,10 +30,15 @@ export class DebtCalculationService {
   calculateMonthlyDebts(accountings: MonthlyAccounting[]): MonthlyDebtInfo[] {
     return accountings
       .map((acc: any) => {
+        console.log(acc)
+
+        console.log(acc.paymets)
         const totalPaid = (acc.paymets ?? []).reduce(
           (sum: number, p: any) => sum + (p.amount ?? 0),
           0,
         );
+
+        console.log(totalPaid)
 
         const honorary = acc.honorary ?? 0;
 

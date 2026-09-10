@@ -108,7 +108,6 @@ type MonthlyAccounting = {
 export type PaymentsPdfBody = {
   customer: Customer;
   totalDebt: number;
-  totalPaid: number;
   accountingForMonth: MonthlyAccounting[];
   accountingServices: AccountingServices[];
 };

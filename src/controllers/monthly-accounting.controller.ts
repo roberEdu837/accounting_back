@@ -138,10 +138,6 @@ export class MonthlyAccountingController {
       0,
     );
 
-    const totalPaid = calculateMonthlyDebts.reduce(
-      (sum, acc) => sum + acc.totalPaid, 0
-    )
-
 
     var total = totalDebt + totalDebtServices;
     const data: PaymentsPdfBody = {
@@ -153,7 +149,7 @@ export class MonthlyAccountingController {
       totalDebt: total,
       accountingForMonth: calculateMonthlyDebts,
       accountingServices: debtsServices,
-      totalPaid
+
     };
 
     const pdfBuffer = await this.pdfService.generatePaymentsStatement(data);
@@ -366,7 +362,6 @@ export class MonthlyAccountingController {
 
     if (year !== 0) whereFilter.year = year;
 
-    // 1. Consultar las contabilidades con sus clientes y pagos realizados
     const filter: Filter<MonthlyAccounting> = {
       where: whereFilter,
       include: [
@@ -398,29 +393,24 @@ export class MonthlyAccountingController {
 
     if (results.length === 0) return [];
 
-    // 2. Extraer los IDs de las contabilidades para buscar TODOS sus servicios
     const monthlyIds = results
       .map(item => item.id)
       .filter((id): id is number => id !== undefined);
 
-    // 3. Buscar todos los servicios adicionales asignados a estas contabilidades (tengan pago o no)
     const allServices = await this.accountingServiceRepository.find({
       where: {
         monthlyAccountingId: {inq: monthlyIds},
       },
     });
 
-    // 4. Mapear y calcular los pagos y deudas
     return results.map((item: any) => {
       const itemObj = item.toJSON ? item.toJSON() : item;
       const payments = itemObj.paymets || [];
 
-      // Obtener los servicios correspondientes a este registro de contabilidad
       const itemServices = allServices.filter(
         s => s.monthlyAccountingId === itemObj.id,
       );
 
-      // Mapear los servicios asignando sus pagos correspondientes si existen
       const servicesWithPayments = itemServices.map(service => {
         const servicePayments = payments.filter(
           (p: any) => p.accountingServiceId === service.id,
@@ -436,14 +426,12 @@ export class MonthlyAccountingController {
         };
       });
 
-      // A. Totales de Contabilidad Mensual
       const honoraryAmount = itemObj.honorary || 0;
       const paidAccounting = payments
         .filter((p: any) => !p.accountingServiceId)
         .reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
       const debtAccounting = Math.max(0, honoraryAmount - paidAccounting);
 
-      // B. Totales de Servicios Adicionales (calculados directamente de la tabla accountingService)
       const servicesAmount = itemServices.reduce(
         (acc: number, s: any) => acc + (s.amount || 0),
         0,
@@ -453,7 +441,6 @@ export class MonthlyAccountingController {
         .reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
       const debtServices = Math.max(0, servicesAmount - paidServices);
 
-      // C. Totales Consolidados (Contabilidad + Servicios)
       const totalToPay = honoraryAmount + servicesAmount;
       const paid = paidAccounting + paidServices;
       const debt = Math.max(0, totalToPay - paid);
