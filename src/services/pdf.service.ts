@@ -9,12 +9,26 @@ import {PaymentsPdfBody} from '../specs/monthly-accounting.spec';
 @injectable()
 export class PdfGeneratorService {
   async generatePaymentsStatement(data: PaymentsPdfBody): Promise<Buffer> {
+
+
     const fonts = {
       Roboto: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique',
+        normal: path.resolve(
+          __dirname,
+          '../../node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff',
+        ),
+        bold: path.resolve(
+          __dirname,
+          '../../node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff',
+        ),
+        italics: path.resolve(
+          __dirname,
+          '../../node_modules/@fontsource/roboto/files/roboto-latin-400-italic.woff',
+        ),
+        bolditalics: path.resolve(
+          __dirname,
+          '../../node_modules/@fontsource/roboto/files/roboto-latin-700-italic.woff',
+        ),
       },
     };
 
